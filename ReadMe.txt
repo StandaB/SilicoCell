@@ -8,10 +8,11 @@ CZ
 	-Monitor s rozlisenim 1024x768 a vyssi
 
 ## 	Spusteni:
-	1. Spustit Prikazovy radek (Win+R -> cmd)
-	2. Prejit na adresar s programem SilicoCell.exe
+	1. Stahnout soubor SilicoCell.exe
+	2. Spustit Prikazovy radek (Win+R -> cmd)
+	3. Prejit na adresar s programem SilicoCell.exe
 	(napr. cd C:\Users\uzivatelske_jmeno\Desktop)
-	3. Spustit program SilicoCell s parametry simulace ("SilicoCell -h" pro napovedu)
+	4. Spustit program SilicoCell s parametry simulace ("SilicoCell -h" pro napovedu)
 
 EN
 ## 	Requirements:
@@ -20,10 +21,11 @@ EN
 	-Display with resolution 1024x768 or better
 
 ## 	Quick start:
-	1. Open Command Prompt (Win+R -> cmd)
-	2. Navigate to directory with SilicoCell.exe
+	1. Download file SilicoCell.exe
+	2. Open Command Prompt (Win+R -> cmd)
+	3. Navigate to directory with SilicoCell.exe
 	(e.g. cd C:\Users\user_name\Desktop)
-	3. Run tool SilicoCell with simulation parameters ("SilicoCell -h" for help)
+	4. Run tool SilicoCell with simulation parameters ("SilicoCell -h" for help)
 
 
 Stanislav Belehradek, 2017
