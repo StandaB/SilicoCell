@@ -2,16 +2,16 @@ SilicoCell model:
 a novel tool for tumor and cell growth simulation.
 
 CZ
-## 	Požadavky:
-	-Systém Windows
-	-Grafická karta podporující OpenGL
-	-Monitor s rozlišením 1024x768 a vyšší
+## 	Pozadavky:
+	-System Windows
+	-Graficka karta podporujici OpenGL
+	-Monitor s rozlisenim 1024x768 a vyssi
 
-## 	Spuštìní:
-	1. Spustit Pøíkazový øádek (Win+R -> cmd)
-	2. Pøejít na adresáø s programem SilicoCell.exe
-	(napø. cd C:\Users\uzivatelske_jmeno\Desktop)
-	3. Spustit program SilicoCell s parametry simulace ("SilicoCell -h" pro nápovìdu)
+## 	Spusteni:
+	1. Spustit Prikazovy radek (Win+R -> cmd)
+	2. Prejit na adresar s programem SilicoCell.exe
+	(napr. cd C:\Users\uzivatelske_jmeno\Desktop)
+	3. Spustit program SilicoCell s parametry simulace ("SilicoCell -h" pro napovedu)
 
 EN
 ## 	Requirements:
@@ -26,5 +26,5 @@ EN
 	3. Run tool SilicoCell with simulation parameters ("SilicoCell -h" for help)
 
 
-Stanislav Bìlehrádek, 2017
+Stanislav Belehradek, 2017
 xbeleh05@stud.feec.vutbr.cz
