@@ -59,12 +59,35 @@ int main(int argc, char* const argv[])
 	// GUI
 	if ((argc != 2) && (argc != 6)) { // chybne zadani
 		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model>" << endl;
+		cout << "pro napovedu: " << argv[0] << " -h" << endl;
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
-		cout << "SilicoCell model 2017" << endl;
 
+		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+		cout << "\nSilicoCell model\n\n\n";
 
+		cout << "-Pro spravne nastaveni simulace je potreba zadat 5 parametru v nasledujicim poradi:\n";
+		cout << "	1. Pocet iteraci (jedna iterace odpovida jedne minute bunecneho cyklu)\n";
+		cout << "	2. Casove meritko (uroven zrychleni vypoctu: meritko 5 -> 1 iterace = 5 minut)\n";
+		cout << "		- optimalni rozsah 1 az 5\n";
+		cout << "	3. omezeni osy x pro zmenseni zobrazovaneho objemu a snizeni vypocetnich naroku\n";
+		cout << "		- optimalni rozsah 100 az 200\n";
+		cout << "		- 0 pro vypnuti omezeni\n";
+		cout << "	4. omezeni osy z pro zmenseni zobrazovaneho objemu a snizeni vypocetnich naroku\n";
+		cout << "		- optimalni rozsah 100 az 200\n";
+		cout << "		- 0 pro vypnuti omezeni\n";
+		cout << "	5. prostorovy model rozlozeni latek\n";
+		cout << "		- 1 pro plosny model\n";
+		cout << "		- 2 pro model cevy\n\n";
 
+		cout << "Ovladani:\n";
+		cout << "-Leve tlacitko mysi + pohyb mysi: otaceni zobrazeni\n";
+		cout << "-Prave tlacitko mysi + posuv mysi: zobrazeni rezu objektem.\n";
+		cout << "-Klavesa Esc: ukonceni simulace\n\n\n";
+
+		cout << "Stanislav Belehradek, 2017\n";
+		cout << "xbeleh05@stud.feec.vutbr.cz\n";
+		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 	}
 	else if (argc == 6)
 	{
@@ -94,6 +117,14 @@ int main(int argc, char* const argv[])
 			omezeni_x = pom;
 			omezeni_z = pom2;
 		}
+		if (pom > 0)
+		{
+			omezeni_x = pom;
+		}
+		if (pom2 > 0)
+		{
+			omezeni_z = pom2;
+		}
 		stringstream(argv[5]) >> pom;
 		if (pom == 1)
 		{
@@ -107,9 +138,19 @@ int main(int argc, char* const argv[])
 		bunky bunky;
 		bunky.inicializace();
 
-		cout << "----------------------------------------------\n";
-		cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem omezen na " << omezeni_x << "x" << omezeni_z << " um." << endl;
-		cout << "----------------------------------------------\n";
+		if (omezeni == 1)
+		{
+			cout << "----------------------------------------------\n";
+			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem omezen na " << omezeni_x << "x" << omezeni_z << " um." << endl;
+			cout << "----------------------------------------------\n";
+		}
+		else
+		{
+			cout << "----------------------------------------------\n";
+			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
+			cout << "----------------------------------------------\n";
+		}
+		
 
 		// vypocet a zobrazeni
 		// zapnuti okna
