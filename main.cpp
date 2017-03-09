@@ -154,13 +154,15 @@ int main(int argc, char* const argv[])
 
 		// vypocet a zobrazeni
 		// zapnuti okna
-		sf::ContextSettings context;
-		context.antialiasingLevel = 4;
-		context.depthBits = 32;
-		context.stencilBits = 8;
+		sf::ContextSettings conset;
+		conset.antialiasingLevel = 4;
+		conset.depthBits = 24;
+		conset.stencilBits = 8;
+		conset.majorVersion = 3;
+		conset.minorVersion = 0;
 
 
-		sf::RenderWindow window(sf::VideoMode(1024, 768, 32), "SilicoCell Model", sf::Style::Close | sf::Style::Resize, context);	// inicializace okna
+		sf::RenderWindow window(sf::VideoMode(1024, 768, 32), "SilicoCell Model", sf::Style::Close | sf::Style::Resize, conset);	// inicializace okna
 		Settings(1024, 768);
 
 		window.setVerticalSyncEnabled(true);
