@@ -308,6 +308,9 @@ int main(int argc, char* const argv[])
 				{
 					glColor3f(0.0, 0.0, 0.0);
 				}
+				if (bunky.tumor[i] == 1) {
+					glColor3f(0.2, 0.3, 0.8);
+				}
 
 				glVertex3f(bunky.x[i], bunky.y[i], bunky.z[i]);
 				glEnd();

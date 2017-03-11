@@ -26,9 +26,10 @@ void bunky::inicializace()
 		//doba_zivota.push_back(round(10 * ((rand() % 1001) / 1000.0)));
 		doba_zivota.push_back(1);
 		poskozeni.push_back((rand() % 1001) / 1000.0);
-		prah_apop.push_back(0.0001);
+		prah_apop.push_back(0);
 		dotyku.push_back(0);
 		prekryti.push_back(0);
+		tumor.push_back(0); // oznaceni zdravych bunek
 
 		rust.push_back(0); // krok zmeny velikosti
 		delka_cyklu.push_back(0); // nastavena delka cyklu
@@ -67,7 +68,6 @@ void bunky::transform2(int poz_x, int poz_y, int poz_z)
 }
 
 
-//void bunky::bunky_cyklus(int od_x, int kam_x)
 void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber)
 {
 	kolik = size(x);
@@ -78,6 +78,12 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 // poskozeni
 		poskozeni[n] = 0.001; // <0, 1> podle toxinu v okoli
 		prah_apop[n] = 0.0001 * meritko; // pst apoptozy <0, 1> v zavislosti na meritku (rychlejsi = mene iteraci pro dokonceni cyklu = mene vyhodnoceni pst)
+
+// // zpracovani signalnich drah - vypocet parametru (delka cyklu, velikost bunky) // //
+		delka_cyklu[n] = (t_S + t_G2 + t_M) / meritko; // delka cyklu (ziviny + mitogen)
+		rust[n] = (r[n] * pow(2.0, (1.0 / 3.0)) - r[n]) / delka_cyklu[n]; // krok rustu (ziviny + rustovy faktor)
+		prah_ziviny = 0.5;
+		prah_poskozeni = 0.5;
 
 
 
@@ -106,6 +112,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				prah_apop.erase(prah_apop.begin() + n);
 				dotyku.erase(dotyku.begin() + n);
 				prekryti.erase(prekryti.begin() + n);
+				tumor.erase(tumor.begin() + n);
 
 				pocet_A = pocet_A + 1;
 				kolik = size(x);
@@ -150,12 +157,15 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				trvani_cyklu[n] = trvani_cyklu[n] - ((trvani_cyklu[n] > 0) - (trvani_cyklu[n] < 0)); // pokles na 0 v nepriznivych podminkach
 			}
 
+// prah deleni
+			prah_deleni = 0.1;
 			mark2 = 0;
 			if (kolik_mitogenu > prah_deleni) // pritomnost mitogenu
 			{
 				mark2 = 1;
 			}
 
+// nevratna faze G0
 			if (poskozeni[n] <= (10 * prah_apop[n])) // vratna/nevratna G0
 			{
 				if ((mark1 + mark2) == 2)
@@ -165,7 +175,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				}
 			}
 
-
+//prah_deleni2 = 0.8;
 			//if (kolik_mitogenu > prah_deleni2) // v nadprahovem pripade neni reseno malo prostoru a bunka rovnou vstupuje do G1
 			//{
 			//	stav[n] = 1;
@@ -203,12 +213,6 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				kolik_RF = vypocty.RF(x[n], y[n], z[n], vyber);
 				kolik_mitogenu = vypocty.mitogeny(x[n], y[n], z[n], vyber);
 				kolik_toxinu = vypocty.toxiny(x[n], y[n], z[n], vyber);
-
-// // zpracovani signalnich drah - vypocet parametru (delka cyklu, velikost bunky) // //
-				delka_cyklu[n] = (t_S + t_G2 + t_M) / meritko; // delka cyklu (ziviny + mitogen)
-				rust[n] = (r[n] * pow(2.0, (1.0 / 3.0)) - r[n]) / delka_cyklu[n]; // krok rustu (ziviny + rustovy faktor)
-				prah_ziviny = 0.5;
-				prah_poskozeni = 0.5;
 
 
 				mark1 = 1;
@@ -295,7 +299,8 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				dotyku.push_back(0);
 				prekryti.push_back(0);
 				prekryti.push_back(0);
-
+				tumor.push_back(tumor[n]);
+				tumor.push_back(tumor[n]);
 				
 				// vymazani materske bunky
 				x.erase(x.begin() + n);
@@ -312,6 +317,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				prah_apop.erase(prah_apop.begin() + n);
 				dotyku.erase(dotyku.begin() + n);
 				prekryti.erase(prekryti.begin() + n);
+				tumor.erase(tumor.begin() + n);
 
 			}
 
@@ -328,22 +334,24 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 		poskozeni[n] = poskozeni[n] * (1 - oprava); // opravne mechanismy bunky
 
+// oznaceni bunek tumoru
+		double tum_cyk = 500.0 / meritko; // najit zdroj rychlosti deleni tumorovych bunek!!!
+		if (delka_cyklu[n] < tum_cyk)
+		{
+			tumor[n] = 1;
+		}
+		if (prah_apop[n] == -1)
+		{
+			tumor[n] = 1;
+		}
+// zatim nahodne urceni
+		if (((rand() % 100001) / 100000.0) < (0.000001 * meritko))
+		{
+			tumor[n] = 1;
+		}
+
 
 	}
-	//x.shrink_to_fit();
-	//y.shrink_to_fit();
-	//z.shrink_to_fit();
-	//r.shrink_to_fit();
-	//poz_r.shrink_to_fit();
-	//stav.shrink_to_fit();
-	//rust.shrink_to_fit();
-	//doba_zivota.shrink_to_fit();
-	//delka_cyklu.shrink_to_fit();
-	//trvani_cyklu.shrink_to_fit();
-	//poskozeni.shrink_to_fit();
-	//prah_apop.shrink_to_fit();
-	//dotyku.shrink_to_fit();
-	//prekryti.shrink_to_fit();
 }
 
 

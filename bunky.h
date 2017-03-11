@@ -31,6 +31,8 @@ public:
 	vector<double> r;
 	vector<int> stav;
 	int pocet_A = 0;
+
+	vector<bool> tumor;
 	
 private:
 	vypocty vypocty;
@@ -58,8 +60,7 @@ private:
 	vector<double> trvani_cyklu;
 	double prah_ziviny;
 	double prah_poskozeni;
-	double prah_deleni = 0.1;
-	double prah_deleni2 = 0.8;
+	double prah_deleni, prah_deleni2;
 
 	double prumer_x;
 	double prumer_y;
