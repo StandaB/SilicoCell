@@ -136,7 +136,7 @@ int main(int argc, char* const argv[])
 		}
 
 		bunky bunky;
-		bunky.inicializace();
+		bunky.inicializace(meritko);
 
 		if (omezeni == 1)
 		{
@@ -225,9 +225,8 @@ int main(int argc, char* const argv[])
 															// vypocet cyklu
 			if (pocet_iteraci < iteraci)
 			{
-				bunky.bunky_cyklus(t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber);
-
 				bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);
+				bunky.bunky_cyklus(t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber);
 
 				pocet_iteraci += 1;
 				cout << "\riterace: " << pocet_iteraci << " | pocet bunek: " << size(bunky.x);

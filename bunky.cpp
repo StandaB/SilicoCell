@@ -6,7 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 
-void bunky::inicializace()
+void bunky::inicializace(double meritko)
 {
 	srand(time(0)); // inicializace generatoru nahodnych cisel
 
@@ -26,17 +26,55 @@ void bunky::inicializace()
 		//doba_zivota.push_back(round(10 * ((rand() % 1001) / 1000.0)));
 		doba_zivota.push_back(1);
 		poskozeni.push_back((rand() % 1001) / 1000.0);
-		prah_apop.push_back(0);
+		prah_apop.push_back(0.0001);
+		prah_ziviny.push_back(0.5);
+		prah_poskozeni.push_back(0.5);
+		prah_deleni.push_back(0.1); // mitogeny
+		prah_RF.push_back(0.5);
+		metabolismus.push_back(0.001);
 		dotyku.push_back(0);
 		prekryti.push_back(0);
 		tumor.push_back(0); // oznaceni zdravych bunek
 
-		rust.push_back(0); // krok zmeny velikosti
-		delka_cyklu.push_back(0); // nastavena delka cyklu
+		rust.push_back((r[i] * pow(2.0, (1.0 / 3.0)) - r[i]) / (780 / meritko)); // krok zmeny velikosti
+		delka_cyklu.push_back(780 / meritko); // nastavena delka cyklu
 		trvani_cyklu.push_back(0); // aktualni doba v cyklu
 
 	}
-	oprava = 0.01; // kolik chyb se opravi <0,1>
+	oprava = 0.01; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
+
+// generovani ECM
+	for (size_t i = 0; i < (200*200*200); i++)
+	{
+		double c1 = (rand() % 1001) / 1000.0;
+		double c2 = (rand() % 1001) / 1000.0;
+		double c3 = (rand() % 1001) / 1000.0;
+		double soucet_c = c1 + c2 + c3;
+
+		ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um)
+		ECM_y[i] = c2 / soucet_c;
+		ECM_z[i] = c3 / soucet_c;
+
+		//// stejny smer
+		//ECM_x[i] = 0.8;
+		//ECM_y[i] = 0.1;
+		//ECM_z[i] = 0.1;
+
+
+		meta[i] = 0; // koncentrace metabolitu v oblastech (1x1x1 meta = 20x20x20 um)
+	}
+
+// vytvoreni bunky tumoru
+	tumor[1] = 1;
+	prah_apop[1] = -1;
+	poskozeni[1] = 0;
+	delka_cyklu[1] = 500 / meritko; // S+G2+M faze
+	rust[1] = (r[1] * pow(2.0, (1.0 / 3.0)) - r[1]) / delka_cyklu[1];
+	prah_ziviny[1] = 0.1;
+	prah_poskozeni[1] = 2; // rozsah <0,1>, 2 = poskozeni nema vliv
+	prah_deleni[1] = -1; // nezavisi na mitogenech
+	prah_RF[1] = -1; // nezavisi na RF
+	metabolismus[1] = 0.01; // rychlejsi metabolismus
 
 }
 
@@ -74,19 +112,6 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 	for (size_t n = 0; n < kolik; n++)
 	{
-
-// poskozeni
-		poskozeni[n] = 0.001; // <0, 1> podle toxinu v okoli
-		prah_apop[n] = 0.0001 * meritko; // pst apoptozy <0, 1> v zavislosti na meritku (rychlejsi = mene iteraci pro dokonceni cyklu = mene vyhodnoceni pst)
-
-// // zpracovani signalnich drah - vypocet parametru (delka cyklu, velikost bunky) // //
-		delka_cyklu[n] = (t_S + t_G2 + t_M) / meritko; // delka cyklu (ziviny + mitogen)
-		rust[n] = (r[n] * pow(2.0, (1.0 / 3.0)) - r[n]) / delka_cyklu[n]; // krok rustu (ziviny + rustovy faktor)
-		prah_ziviny = 0.5;
-		prah_poskozeni = 0.5;
-
-
-
 		// // bunecny cyklus // //
 		stav_bb = stav[n];
 		switch (stav_bb) {
@@ -110,6 +135,11 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				trvani_cyklu.erase(trvani_cyklu.begin() + n);
 				poskozeni.erase(poskozeni.begin() + n);
 				prah_apop.erase(prah_apop.begin() + n);
+				prah_ziviny.erase(prah_ziviny.begin() + n);
+				prah_poskozeni.erase(prah_poskozeni.begin() + n);
+				prah_deleni.erase(prah_deleni.begin() + n);
+				prah_RF.erase(prah_RF.begin() + n);
+				metabolismus.erase(metabolismus.begin() + n);
 				dotyku.erase(dotyku.begin() + n);
 				prekryti.erase(prekryti.begin() + n);
 				tumor.erase(tumor.begin() + n);
@@ -142,7 +172,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			}
 
 
-			// ne-/vratna faze G0 (podle poskozeni DNA)
+// ne-/vratna faze G0 (podle poskozeni DNA)
 			mark1 = 0;
 			if (dotyku[n] <= poc_dot) // podle[26] zavisi na poctu dotyku(hustote prostredi)
 			{
@@ -158,9 +188,8 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			}
 
 // prah deleni
-			prah_deleni = 0.1;
 			mark2 = 0;
-			if (kolik_mitogenu > prah_deleni) // pritomnost mitogenu
+			if (kolik_mitogenu > prah_deleni[n]) // pritomnost mitogenu
 			{
 				mark2 = 1;
 			}
@@ -183,8 +212,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			//}
 
 // prah RF
-			prah_RF = 0.5;
-			if (kolik_RF < prah_RF) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
+			if (kolik_RF < prah_RF[n]) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
 			{
 				stav[n] = -1; // apoptoza
 				trvani_cyklu[n] = 0;
@@ -198,7 +226,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			trvani_cyklu[n] += 1; // doba ve fazi
 
 			mark4 = 1;
-			if (dotyku[n] > poc_dot) // maximalni pocet povolenych dotyku
+			if (!tumor[n] && (dotyku[n] > poc_dot)) // maximalni pocet povolenych dotyku, pro tumor nema efekt
 			{
 				mark4 = 0;
 				stav[n] = 0; // prechod do G0
@@ -216,7 +244,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 
 				mark1 = 1;
-				if (kolik_zivin < prah_ziviny)
+				if (kolik_zivin < prah_ziviny[n])
 				{
 					mark1 = 0;
 					stav[n] = 0; // prechod do G0
@@ -224,13 +252,13 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				}
 
 				mark2 = 0;
-				if (kolik_mitogenu > prah_deleni)
+				if (kolik_mitogenu > prah_deleni[n])
 				{
 					mark2 = 1;
 				}
 
 				mark3 = 1;
-				if (poskozeni[n] > prah_poskozeni)
+				if (poskozeni[n] > prah_poskozeni[n])
 				{
 					mark3 = 0;
 				}
@@ -253,9 +281,6 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			{
 				r[n] = r[n] + rust[n]; // rust bunky
 
-
-// metabolismus?
-
 				trvani_cyklu[n] = trvani_cyklu[n] + 1;
 
 				if ((((rand() % 1000001) / 1000000.0) / poskozeni[n]) < prah_apop[n]) // kontrolni bod
@@ -266,6 +291,32 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			}
 			else // deleni
 			{
+
+				r[n] = r[n] / pow(2.0, (1.0 / 3.0));
+
+// urceni parametru novych bunek ze signalnich drah
+				if (!tumor[n])
+				{
+// poskozeni
+					poskozeni[n] = 0.001; // <0, 1> podle toxinu v okoli
+					prah_apop[n] = 0.0001 / meritko; // pst apoptozy <0, 1> v zavislosti na meritku (rychlejsi = mene iteraci pro dokonceni cyklu = mene vyhodnoceni pst)
+
+// // zpracovani signalnich drah - vypocet parametru (delka cyklu, velikost bunky) // //
+					delka_cyklu[n] = (t_S + t_G2 + t_M) / meritko; // delka cyklu (ziviny + mitogen)
+					rust[n] = (r[n] * pow(2.0, (1.0 / 3.0)) - r[n]) / delka_cyklu[n]; // krok rustu (ziviny + rustovy faktor)
+					prah_ziviny[n] = 0.5;
+					prah_poskozeni[n] = 0.5;
+					prah_deleni[n] = 0.1; // mitogeny
+					metabolismus[n] = 0.001; // rychlost metabolismu bunky - pricitani v dane oblasti, ovlivnuje poskozeni. Snizovani postupne
+
+// tumor ovlivnuje prah_apop (-1), prah_RF, prah_deleni, prah_poskozeni?, prah_ziviny?
+
+
+
+
+				}
+
+
 				// vytvoreni dcerinych bunek
 				kam_x = ((5.0 * ((rand() % 1001) / 1000.0)) - 0.5);
 				kam_y = ((5.0 * ((rand() % 1001) / 1000.0)) - 0.5);
@@ -277,30 +328,41 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				y.push_back(y[n] - kam_y);
 				z.push_back(z[n] + kam_z);
 				z.push_back(z[n] - kam_z);
-				r.push_back(r[n] / pow(2.0, (1.0 / 3.0)));
-				r.push_back(r[n] / pow(2.0, (1.0 / 3.0)));
+				r.push_back(r[n]);
+				r.push_back(r[n]);
 				poz_r.push_back(poz_r[n]);
 				poz_r.push_back(poz_r[n]);
 				stav.push_back(1);
 				stav.push_back(1);
-				rust.push_back(0);
-				rust.push_back(0);
+				rust.push_back(rust[n]);
+				rust.push_back(rust[n]);
 				doba_zivota.push_back(0);
 				doba_zivota.push_back(0);
-				delka_cyklu.push_back(0);
-				delka_cyklu.push_back(0);
+				delka_cyklu.push_back(delka_cyklu[n]);
+				delka_cyklu.push_back(delka_cyklu[n]);
 				trvani_cyklu.push_back(0);
 				trvani_cyklu.push_back(0);
 				poskozeni.push_back(poskozeni[n]);
 				poskozeni.push_back(poskozeni[n]);
 				prah_apop.push_back(prah_apop[n]);
 				prah_apop.push_back(prah_apop[n]);
-				dotyku.push_back(0);
-				dotyku.push_back(0);
+				prah_ziviny.push_back(prah_ziviny[n]);
+				prah_ziviny.push_back(prah_ziviny[n]);
+				prah_poskozeni.push_back(prah_poskozeni[n]);
+				prah_poskozeni.push_back(prah_poskozeni[n]);
+				prah_deleni.push_back(prah_deleni[n]);
+				prah_deleni.push_back(prah_deleni[n]);
+				prah_RF.push_back(prah_RF[n]);
+				prah_RF.push_back(prah_RF[n]);
+				metabolismus.push_back(metabolismus[n]);
+				metabolismus.push_back(metabolismus[n]);
+				dotyku.push_back(dotyku[n]);
+				dotyku.push_back(dotyku[n]);
 				prekryti.push_back(0);
 				prekryti.push_back(0);
 				tumor.push_back(tumor[n]);
 				tumor.push_back(tumor[n]);
+
 				
 				// vymazani materske bunky
 				x.erase(x.begin() + n);
@@ -315,6 +377,11 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				trvani_cyklu.erase(trvani_cyklu.begin() + n);
 				poskozeni.erase(poskozeni.begin() + n);
 				prah_apop.erase(prah_apop.begin() + n);
+				prah_ziviny.erase(prah_ziviny.begin() + n);
+				prah_poskozeni.erase(prah_poskozeni.begin() + n);
+				prah_deleni.erase(prah_deleni.begin() + n);
+				prah_RF.erase(prah_RF.begin() + n);
+				metabolismus.erase(metabolismus.begin() + n);
 				dotyku.erase(dotyku.begin() + n);
 				prekryti.erase(prekryti.begin() + n);
 				tumor.erase(tumor.begin() + n);
@@ -328,6 +395,13 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			cout << "chyba: bunka " << n << " ma stav " << stav_bb << endl;
 			break;
 		}
+
+// apoptoza kdyz je bunka bez dotyku
+		//if (dotyku[n]==0)
+		//{
+		//	stav[n] = -1;
+		//	trvani_cyklu[n] = 0;
+		//}
 
 // // mutace ?
 
@@ -344,14 +418,30 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 		{
 			tumor[n] = 1;
 		}
-// zatim nahodne urceni
-		if (((rand() % 100001) / 100000.0) < (0.000001 * meritko))
-		{
-			tumor[n] = 1;
-		}
+//// zatim nahodne urceni
+//		if (((rand() % 100001) / 100000.0) < (0.000001 * meritko))
+//		{
+//			tumor[n] = 1;
+//			prah_apop[n] == -1;
+//		}
 
+// metabolismus
+		int kde_x = round(x[n] / 20.0);
+		int kde_y = round(y[n] / 20.0);
+		int kde_z = round(z[n] / 20.0);
+
+		int f = kde_x + (kde_y + 200 - 1) + (kde_z + ((200 - 1) * (200 - 1)));
+
+		meta[f] += metabolismus[n]; // 
 
 	}
+
+// snizovani koncentrace metabolitu (lymf. system atd.)
+	for (size_t i = 0; i < (200*200*200); i++)
+	{
+		meta[i] = meta[i] * 0.9;
+	}
+
 }
 
 
@@ -405,7 +495,7 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 				else if (vzdalenost <= 20.0) // pohyb k blizkemu okoli
 				{
 					okoli2 += 1.0;
-					energie = meritko * -(0.001 / exp(vzdalenost/5)); // vypocet energie posunu
+					energie = meritko * -(0.001 / exp(vzdalenost/10)); // vypocet energie posunu
 
 					en_x2 = en_x2 + (vzd_xx * energie);
 					en_y2 = en_y2 + (vzd_yy * energie);
@@ -424,17 +514,23 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 		en2 = abs(sqrt(pow(en_x2, 2.0) + pow(en_y2, 2.0) + pow(en_z2, 2.0)));
 
 		// vypocet posuvu
+		int kde_x = round(x[n] / 20.0);
+		int kde_y = round(y[n] / 20.0);
+		int kde_z = round(z[n] / 20.0);
+
+		int f = kde_x + (kde_y + 200 - 1) + (kde_z + ((200 - 1) * (200 - 1))); // pro pocet oblasti ECM 200*200*200. 1 oblast = 20*20*20 um
+
 		if (en1 >= en2) // prioritu ma rozdeleni bunek pred priblizenim
 		{
-			do_x = x[n] + (en_x / okoli);
-			do_y = y[n] + (en_y / okoli);
-			do_z = z[n] + (en_z / okoli);
+			do_x = x[n] + ((en_x / okoli) * ECM_x[f]); // ECM ovlivnuje jak snadno se v danem smeru bunka pohybuje
+			do_y = y[n] + ((en_y / okoli) * ECM_y[f]);
+			do_z = z[n] + ((en_z / okoli) * ECM_z[f]);
 		}
 		else
 		{
-			do_x = x[n] + (en_x2 / okoli2);
-			do_y = y[n] + (en_y2 / okoli2);
-			do_z = z[n] + (en_z2 / okoli2);
+			do_x = x[n] + ((en_x / okoli2) * ECM_x[f]);
+			do_y = y[n] + ((en_y / okoli2) * ECM_y[f]);
+			do_z = z[n] + ((en_z / okoli2) * ECM_z[f]);
 		}
 		
 
@@ -461,10 +557,22 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 			}
 		}
 
+		// zamezeni rustu do zapornych cisel
+		if (do_y < 0.0)
+		{
+			do_y = y[n];
+			dotyku[n] += 1;
+		}
+		if (do_x < 0.0)
+		{
+			do_x = x[n];
+			dotyku[n] += 1;
+		}
+
 		// posun bunek
-		x2[n] = do_x;
-		y2[n] = do_y;
-		z2[n] = do_z;
+		x2[n] = (do_x);
+		y2[n] = (do_y);
+		z2[n] = (do_z);
 		
 	}
 	x.clear();

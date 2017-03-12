@@ -17,7 +17,7 @@ class bunky {
 public:
 	//void bunky_cyklus(int od_x, int kam_x);
 	void bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber);
-	void inicializace();
+	void inicializace(double meritko);
 	void transform2(int poz_x, int poz_y, int poz_z);
 	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
 	void zmena_rozliseni(int pos_x, int pos_y);
@@ -33,6 +33,12 @@ public:
 	int pocet_A = 0;
 
 	vector<bool> tumor;
+
+	double* ECM_x = new double[200*200*200]; // velikost ECM pole
+	double* ECM_y = new double[200*200*200];
+	double* ECM_z = new double[200*200*200];
+
+	double* meta = new double[200*200*200]; // velikost pole metabolitu
 	
 private:
 	vypocty vypocty;
@@ -51,16 +57,17 @@ private:
 	vector<double> poskozeni;
 	double oprava;
 	vector<double> prah_apop;
-	double prah_RF;
+	vector<double> prah_RF;
 	vector<int> dotyku;
 	vector<double> prekryti;
 
 	vector<double> rust;
 	vector<double> delka_cyklu;
 	vector<double> trvani_cyklu;
-	double prah_ziviny;
-	double prah_poskozeni;
-	double prah_deleni, prah_deleni2;
+	vector<double> prah_ziviny;
+	vector<double> prah_poskozeni;
+	vector<double> prah_deleni;
+	vector<double> metabolismus;
 
 	double prumer_x;
 	double prumer_y;
