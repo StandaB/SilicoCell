@@ -17,7 +17,7 @@ class bunky {
 public:
 	//void bunky_cyklus(int od_x, int kam_x);
 	void bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber);
-	void inicializace(double meritko);
+	void inicializace(double meritko, bool tum);
 	void transform2(int poz_x, int poz_y, int poz_z);
 	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
 	void zmena_rozliseni(int pos_x, int pos_y);

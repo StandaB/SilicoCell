@@ -31,7 +31,7 @@ int main(int argc, char* const argv[])
 	int iteraci;
 	int pocet_iteraci = 0;
 
-	bool omezeni = 0;
+	bool omezeni = 0, tum = 0;
 	double omezeni_x = 200.0;
 	double omezeni_z = 200.0;
 	int vyber = 1;
@@ -57,8 +57,8 @@ int main(int argc, char* const argv[])
 	double pom, pom2;
 
 	// GUI
-	if ((argc != 2) && (argc != 6)) { // chybne zadani
-		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model>" << endl;
+	if ((argc != 2) && (argc != 7)) { // chybne zadani
+		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model> <tumor>" << endl;
 		cout << "pro napovedu: " << argv[0] << " -h" << endl;
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
@@ -77,8 +77,10 @@ int main(int argc, char* const argv[])
 		cout << "		- optimalni rozsah 100 az 200\n";
 		cout << "		- 0 pro vypnuti omezeni\n";
 		cout << "	5. prostorovy model rozlozeni latek\n";
+		cout << "		- 0 pro zadny model (idealni podminky)\n";
 		cout << "		- 1 pro plosny model\n";
 		cout << "		- 2 pro model cevy\n\n";
+		cout << "	6. simulace rustu tumoru (y/n)\n";
 
 		cout << "Ovladani:\n";
 		cout << "-Leve tlacitko mysi + pohyb mysi: otaceni zobrazeni\n";
@@ -89,7 +91,7 @@ int main(int argc, char* const argv[])
 		cout << "xbeleh05@stud.feec.vutbr.cz\n";
 		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 	}
-	else if (argc == 6)
+	else if (argc == 7)
 	{
 		stringstream(argv[1]) >> pom;
 		if (pom >= 1 && pom <= 100000)
@@ -101,7 +103,7 @@ int main(int argc, char* const argv[])
 			iteraci = 1000;
 		}
 		stringstream(argv[2]) >> pom;
-		if (pom >= 0 && pom <= 5)
+		if (pom >= 0 && pom <= 10)
 		{
 			meritko = pom;
 		}
@@ -134,22 +136,34 @@ int main(int argc, char* const argv[])
 		{
 			vyber = 2;
 		}
+		else
+		{
+			vyber = 0;
+		}
+
+		if ((strcmp(argv[6], "y") == 0) || strcmp(argv[6], "-y") == 0)
+		{
+			tum = 1;
+		}
 
 		bunky bunky;
-		bunky.inicializace(meritko);
+		bunky.inicializace(meritko, tum);
 
+
+		cout << "----------------------------------------------\n";
 		if (omezeni == 1)
 		{
-			cout << "----------------------------------------------\n";
 			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem omezen na " << omezeni_x << "x" << omezeni_z << " um." << endl;
-			cout << "----------------------------------------------\n";
 		}
 		else
 		{
-			cout << "----------------------------------------------\n";
 			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
-			cout << "----------------------------------------------\n";
 		}
+		if (tum == 1)
+		{
+			cout << "Simulace rustu tumoru\n";
+		}
+		cout << "----------------------------------------------\n";
 		
 
 		// vypocet a zobrazeni
@@ -287,28 +301,42 @@ int main(int argc, char* const argv[])
 				glPointSize((2.f * bunky.r[i]));
 				glBegin(GL_POINTS);
 
-				if (bunky.stav[i] == -1)
-				{
-					glColor3f(0.5, 0.0, 0.0);
-				}
-				else if (bunky.stav[i] == 0)
-				{
-					glColor3f(0.5, 0.5, 0.5);
-				}
-				else if (bunky.stav[i] == 1)
-				{
-					glColor3f(0.7, 0.7, 0.0);
-				}
-				else if (bunky.stav[i] == 2)
-				{
-					glColor3f(0.3, 0.8, 0.1);
+				if (bunky.tumor[i] == 1) {
+					if (bunky.stav[i] == 0)
+					{
+						glColor3f(0.5, 0.5, 0.7);
+					}
+					else if (bunky.stav[i] == 1)
+					{
+						glColor3f(0.3, 0.4, 0.8);
+					}
+					else if (bunky.stav[i] == 2)
+					{
+						glColor3f(0.2, 0.3, 0.8);
+					}
 				}
 				else
 				{
-					glColor3f(0.0, 0.0, 0.0);
-				}
-				if (bunky.tumor[i] == 1) {
-					glColor3f(0.2, 0.3, 0.8);
+					if (bunky.stav[i] == -1)
+					{
+						glColor3f(0.5, 0.0, 0.0);
+					}
+					else if (bunky.stav[i] == 0)
+					{
+						glColor3f(0.5, 0.5, 0.5);
+					}
+					else if (bunky.stav[i] == 1)
+					{
+						glColor3f(0.7, 0.7, 0.0);
+					}
+					else if (bunky.stav[i] == 2)
+					{
+						glColor3f(0.3, 0.8, 0.1);
+					}
+					else
+					{
+						glColor3f(0.0, 0.0, 0.0);
+					}
 				}
 
 				glVertex3f(bunky.x[i], bunky.y[i], bunky.z[i]);

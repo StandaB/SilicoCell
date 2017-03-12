@@ -6,7 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 
-void bunky::inicializace(double meritko)
+void bunky::inicializace(double meritko, bool tum)
 {
 	srand(time(0)); // inicializace generatoru nahodnych cisel
 
@@ -25,8 +25,8 @@ void bunky::inicializace(double meritko)
 		stav.push_back(1);
 		//doba_zivota.push_back(round(10 * ((rand() % 1001) / 1000.0)));
 		doba_zivota.push_back(1);
-		poskozeni.push_back((rand() % 1001) / 1000.0);
-		prah_apop.push_back(0.0001);
+		poskozeni.push_back(((rand() % 1001) / 1000.0));
+		prah_apop.push_back(0.0001 / meritko);
 		prah_ziviny.push_back(0.5);
 		prah_poskozeni.push_back(0.5);
 		prah_deleni.push_back(0.1); // mitogeny
@@ -46,35 +46,42 @@ void bunky::inicializace(double meritko)
 // generovani ECM
 	for (size_t i = 0; i < (200*200*200); i++)
 	{
-		double c1 = (rand() % 1001) / 1000.0;
-		double c2 = (rand() % 1001) / 1000.0;
-		double c3 = (rand() % 1001) / 1000.0;
-		double soucet_c = c1 + c2 + c3;
-
-		ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um)
-		ECM_y[i] = c2 / soucet_c;
-		ECM_z[i] = c3 / soucet_c;
+		//double c1 = (rand() % 1001) / 1000.0;
+		//double c2 = (rand() % 1001) / 1000.0;
+		//double c3 = (rand() % 1001) / 1000.0;
+		//double soucet_c = c1 + c2 + c3;
+		//ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um)
+		//ECM_y[i] = c2 / soucet_c;
+		//ECM_z[i] = c3 / soucet_c;
 
 		//// stejny smer
 		//ECM_x[i] = 0.8;
 		//ECM_y[i] = 0.1;
 		//ECM_z[i] = 0.1;
 
+		// bez ucinku
+		ECM_x[i] = 1;
+		ECM_y[i] = 1;
+		ECM_z[i] = 1;
+
 
 		meta[i] = 0; // koncentrace metabolitu v oblastech (1x1x1 meta = 20x20x20 um)
 	}
 
-// vytvoreni bunky tumoru
-	tumor[1] = 1;
-	prah_apop[1] = -1;
-	poskozeni[1] = 0;
-	delka_cyklu[1] = 500 / meritko; // S+G2+M faze
-	rust[1] = (r[1] * pow(2.0, (1.0 / 3.0)) - r[1]) / delka_cyklu[1];
-	prah_ziviny[1] = 0.1;
-	prah_poskozeni[1] = 2; // rozsah <0,1>, 2 = poskozeni nema vliv
-	prah_deleni[1] = -1; // nezavisi na mitogenech
-	prah_RF[1] = -1; // nezavisi na RF
-	metabolismus[1] = 0.01; // rychlejsi metabolismus
+	if (tum == 1)
+	{
+		// vytvoreni bunky tumoru
+		tumor[1] = 1;
+		prah_apop[1] = -1;
+		poskozeni[1] = 0;
+		delka_cyklu[1] = 500 / meritko; // S+G2+M faze
+		rust[1] = (r[1] * pow(2.0, (1.0 / 3.0)) - r[1]) / delka_cyklu[1];
+		prah_ziviny[1] = 0.1;
+		prah_poskozeni[1] = 2; // rozsah <0,1>, 2 = poskozeni nema vliv
+		prah_deleni[1] = -1; // nezavisi na mitogenech
+		prah_RF[1] = -1; // nezavisi na RF
+		metabolismus[1] = 0.01; // rychlejsi metabolismus
+	}
 
 }
 
@@ -195,14 +202,14 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			}
 
 // nevratna faze G0
-			if (poskozeni[n] <= (10 * prah_apop[n])) // vratna/nevratna G0
-			{
+			//if (poskozeni[n] <= (10 * prah_apop[n])) // vratna/nevratna G0
+			//{
 				if ((mark1 + mark2) == 2)
 				{
 					stav[n] = 1; // vstup do G1
 					trvani_cyklu[n] = 0;
 				}
-			}
+			//}
 
 //prah_deleni2 = 0.8;
 			//if (kolik_mitogenu > prah_deleni2) // v nadprahovem pripade neni reseno malo prostoru a bunka rovnou vstupuje do G1
@@ -487,7 +494,7 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 					prekryv = prekryv + abs(vzdalenost);
 
 					// vypocet energie posunu - deleni bunek (prekryti)
-					energie = meritko * -vzdalenost/100;
+					energie = meritko * -vzdalenost/200;
 					en_x = en_x + (vzd_xx * energie);
 					en_y = en_y + (vzd_yy * energie);
 					en_z = en_z + (vzd_zz * energie);

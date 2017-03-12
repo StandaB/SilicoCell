@@ -18,6 +18,10 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber)
 		double param_y = (40.0 * cos(zz / 50.0)) + b.posun_y - yy;
 		vysledek = exp(-(sqrt(pow(param_x, 2.0) + pow(param_y, 2.0)) / 200.0));
 	}
+	else if (vyber == 0)
+	{
+		vysledek = 1;
+	}
 	
 
 	return(vysledek);
@@ -36,6 +40,10 @@ double vypocty::toxiny(double xx, double yy, double zz, int vyber)
 		double param_y = (40.0 * cos(zz / 50.0)) + b.posun_y - yy;
 		vysledek = 1 - exp(-(sqrt(pow(param_x, 2.0) + pow(param_y, 2.0)) / 200.0));
 	}
+	else if (vyber == 0)
+	{
+		vysledek = 0;
+	}
 
 	return(vysledek);
 }
@@ -53,6 +61,10 @@ double vypocty::mitogeny(double xx, double yy, double zz, int vyber)
 		double param_y = (40.0 * cos(zz / 50.0)) + b.posun_y - yy;
 		vysledek = exp(-(sqrt(pow(param_x, 2.0) + pow(param_y, 2.0)) / 200.0));
 	}
+	else if (vyber == 0)
+	{
+		vysledek = 1;
+	}
 
 	return(vysledek);
 }
@@ -69,6 +81,10 @@ double vypocty::RF(double xx, double yy, double zz, int vyber)
 		double param_x = (20.0 * sin(zz / 40.0)) + b.posun_x - xx;
 		double param_y = (40.0 * cos(zz / 50.0)) + b.posun_y - yy;
 		vysledek = exp(-(sqrt(pow(param_x, 2.0) + pow(param_y, 2.0)) / 200.0));
+	}
+	else if (vyber == 0)
+	{
+		vysledek = 1;
 	}
 
 	return(vysledek);
