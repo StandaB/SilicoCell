@@ -3,7 +3,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
-#include "Mouse.h"
 #include "bunky.h"
 #include <sstream>
 
@@ -48,10 +47,8 @@ int main(int argc, char* const argv[])
 
 
 	int state = 0;
-	Mouse mys;
-
-
 	double pom, pom2;
+
 // GUI
 	system("cls"); // vymazani obsahu okna
 	if ((argc != 2) && (argc != 7)) { // chybne zadani
@@ -217,30 +214,30 @@ int main(int argc, char* const argv[])
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
 						state = 1;
-						mys.yy = sf::Mouse::getPosition(window).y;
-						mys.xx = sf::Mouse::getPosition(window).x; // ziskani pozice mysi pro otaceni
+						bunky.myy = sf::Mouse::getPosition(window).y;
+						bunky.mxx = sf::Mouse::getPosition(window).x; // ziskani pozice mysi pro otaceni
 					}
-					mys.onLeftButton(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
+					bunky.onLeftButton(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
 				}
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
 						state = 2;
-						mys.zz = sf::Mouse::getPosition(window).y; // ziskani pozice mysi pro posun v ose z (zvetseni)
+						bunky.mzz = sf::Mouse::getPosition(window).y; // ziskani pozice mysi pro posun v ose z - rez
 					}
-					mys.onRightButton(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
+					bunky.onRightButton(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
 				}
 				if (Event.type == sf::Event::MouseButtonReleased)
 				{
 					if (state == 1)
 					{
-						mys.xold = mys.xnew; // ulozeni hodnot pozice mysi
-						mys.yold = mys.ynew;
+						bunky.mxold = bunky.mxnew; // ulozeni hodnot pozice mysi
+						bunky.myold = bunky.mynew;
 					}
 					else if (state == 2)
 					{
-						mys.zold = mys.znew;
+						bunky.mzold = bunky.mznew;
 					}
 					state = 0;
 				}
@@ -248,10 +245,10 @@ int main(int argc, char* const argv[])
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			bunky.transform2(mys.xnew, mys.ynew, mys.znew); // rotace podle polohy mysi
+			bunky.transform2(bunky.mxnew, bunky.mynew, bunky.mznew); // rotace podle polohy mysi
 
 
-															// vypocet cyklu
+			// vypocet cyklu
 			if (pocet_iteraci < iteraci)
 			{
 				bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);

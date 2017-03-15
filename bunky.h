@@ -21,6 +21,8 @@ public:
 	void transform2(int poz_x, int poz_y, int poz_z);
 	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
 	void zmena_rozliseni(int pos_x, int pos_y);
+	void onLeftButton(int mx, int my);
+	void onRightButton(int mx, float my);
 
 	int posun_x = 512;
 	int posun_y = 384 - 100;
@@ -33,6 +35,11 @@ public:
 	int pocet_A = 0;
 
 	vector<bool> tumor;
+
+	int mxnew = 0, mynew = 0;
+	int mxx = 0, myy = 0;
+	int mxold = 0, myold = 0;
+	float mznew = 0, mzz = 0, mzold = 0;
 
 	double* ECM_x = new double[200*200*200]; // velikost ECM pole
 	double* ECM_y = new double[200*200*200];

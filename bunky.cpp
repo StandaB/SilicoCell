@@ -116,6 +116,17 @@ void bunky::transform2(int poz_x, int poz_y, int poz_z)
 	glTranslatef(-posun_x, -posun_y, 0);
 }
 
+void bunky::onLeftButton(int mx, int my)
+{
+	mxnew = mxold - mxx + mx;
+	mynew = myold - myy + my;
+}
+
+void bunky::onRightButton(int mx, float my)
+{
+	mznew = mzold - mzz + my;
+}
+
 
 void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber)
 {
