@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "Settings.h"
 #include <cmath>
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -31,7 +30,7 @@ int main(int argc, char* const argv[])
 	int iteraci;
 	int pocet_iteraci = 0;
 
-	bool omezeni = 0, tum = 0;
+	bool omezeni = 0, tum = 0, pokracovat = 0;
 	double omezeni_x = 200.0;
 	double omezeni_z = 200.0;
 	int vyber = 1;
@@ -59,14 +58,16 @@ int main(int argc, char* const argv[])
 	// GUI
 	if ((argc != 2) && (argc != 7)) { // chybne zadani
 		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model> <tumor>" << endl;
+		cout << "Napr. bunky 2000 2 150 150 1 y" << endl;
 		cout << "pro napovedu: " << argv[0] << " -h" << endl;
+		cout << "pro standardni nastaveni: " << argv[0] << " -s (5 000 iteraci, meritko 2, omezeni 200x200 um, model plochy, s tumorem)" << endl;
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
 		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 		cout << "\nSilicoCell model\n\n\n";
 
-		cout << "-Pro spravne nastaveni simulace je potreba zadat 5 parametru v nasledujicim poradi:\n";
+		cout << "-Pro spravne nastaveni simulace je potreba zadat 6 parametru v nasledujicim poradi:\n";
 		cout << "	1. Pocet iteraci (jedna iterace odpovida jedne minute bunecneho cyklu)\n";
 		cout << "	2. Casove meritko (uroven zrychleni vypoctu: meritko 5 -> 1 iterace = 5 minut)\n";
 		cout << "		- optimalni rozsah 1 az 5\n";
@@ -91,59 +92,71 @@ int main(int argc, char* const argv[])
 		cout << "xbeleh05@stud.feec.vutbr.cz\n";
 		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 	}
-	else if (argc == 7)
-	{
-		stringstream(argv[1]) >> pom;
-		if (pom >= 1 && pom <= 100000)
-		{
-			iteraci = pom;
-		}
-		else
-		{
-			iteraci = 1000;
-		}
-		stringstream(argv[2]) >> pom;
-		if (pom >= 0 && pom <= 10)
-		{
-			meritko = pom;
-		}
-		else
-		{
-			meritko = 1;
-		}
-		stringstream(argv[3]) >> pom;
-		stringstream(argv[4]) >> pom2;
-		if ((pom > 0) && (pom2 > 0))
-		{
-			omezeni = 1;
-			omezeni_x = pom;
-			omezeni_z = pom2;
-		}
-		if (pom > 0)
-		{
-			omezeni_x = pom;
-		}
-		if (pom2 > 0)
-		{
-			omezeni_z = pom2;
-		}
-		stringstream(argv[5]) >> pom;
-		if (pom == 1)
-		{
-			vyber = 1;
-		}
-		else if (pom == 2)
-		{
-			vyber = 2;
-		}
-		else
-		{
-			vyber = 0;
-		}
+	else if ((strcmp(argv[1], "s") == 0) || strcmp(argv[1], "-s") == 0) { // standardni nastaveni
+		iteraci = 5000;
+		meritko = 2;
+		omezeni_x = 200;
+		omezeni_z = 200;
+		vyber = 1;
+		tum = 1;
+		pokracovat = 1;
+	}
 
-		if ((strcmp(argv[6], "y") == 0) || strcmp(argv[6], "-y") == 0)
+	if (argc == 7 || pokracovat == 1)
+	{
+		if (!pokracovat)
 		{
-			tum = 1;
+			stringstream(argv[1]) >> pom;
+			if (pom >= 1 && pom <= 100000)
+			{
+				iteraci = pom;
+			}
+			else
+			{
+				iteraci = 1000;
+			}
+			stringstream(argv[2]) >> pom;
+			if (pom >= 0 && pom <= 10)
+			{
+				meritko = pom;
+			}
+			else
+			{
+				meritko = 1;
+			}
+			stringstream(argv[3]) >> pom;
+			stringstream(argv[4]) >> pom2;
+			if ((pom > 0) && (pom2 > 0))
+			{
+				omezeni = 1;
+				omezeni_x = pom;
+				omezeni_z = pom2;
+			}
+			if (pom > 0)
+			{
+				omezeni_x = pom;
+			}
+			if (pom2 > 0)
+			{
+				omezeni_z = pom2;
+			}
+			stringstream(argv[5]) >> pom;
+			if (pom == 1)
+			{
+				vyber = 1;
+			}
+			else if (pom == 2)
+			{
+				vyber = 2;
+			}
+			else
+			{
+				vyber = 0;
+			}
+			if ((strcmp(argv[6], "y") == 0) || strcmp(argv[6], "-y") == 0)
+			{
+				tum = 1;
+			}
 		}
 
 		bunky bunky;
@@ -177,7 +190,15 @@ int main(int argc, char* const argv[])
 
 
 		sf::RenderWindow window(sf::VideoMode(1024, 768, 32), "SilicoCell Model", sf::Style::Close | sf::Style::Resize, conset);	// inicializace okna
-		Settings(1024, 768);
+
+		glClearDepth(1.f);
+		glClearColor(1.f, 1.f, 1.f, 0.f);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, 1024, 0, 768, -350, 350);
+		glScalef(1.0f, 1.0f, 1.0f);
 
 		window.setVerticalSyncEnabled(true);
 
@@ -189,10 +210,6 @@ int main(int argc, char* const argv[])
 				{
 					window.close();
 				}
-				//if (Event.type == sf::Event::Resized)
-				//{
-				//	Settings onResize(window.getSize().x, window.getSize().y);
-				//}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				{
 					window.close();
