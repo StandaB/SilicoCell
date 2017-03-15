@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 #include "vypocty.h"
-#include <thread>
+//#include <thread>
 
 using namespace std;
 

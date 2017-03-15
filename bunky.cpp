@@ -5,6 +5,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
+#include <chrono>
 
 void bunky::inicializace(double meritko, bool tum)
 {
@@ -16,9 +17,9 @@ void bunky::inicializace(double meritko, bool tum)
 		//x.push_back((50 * ((rand() % 1001) / 1000.0)) - 0.5);
 		//y.push_back((50 * ((rand() % 1001) / 1000.0)) - 0.5);
 		//z.push_back((50 * ((rand() % 1001) / 1000.0)) - 0.5);
-		x.push_back(posun_x + (10 * ((rand() % 1001) / 1000.0)));
-		y.push_back(posun_y + (10 * ((rand() % 1001) / 1000.0)));
-		z.push_back((10 * ((rand() % 1001) / 1000.0)));
+		x.push_back(posun_x + (30 * (((rand() % 1001) / 1000.0) - 0.5)));
+		y.push_back(posun_y + (30 * (((rand() % 1001) / 1000.0) - 0.5)));
+		z.push_back(30 * (((rand() % 1001) / 1000.0) - 0.5));
 		r.push_back(r_bunek * (1 - ((((rand() % 1001) / 1000.0) - 0.5) / 20.0)));
 		poz_r.push_back(r_bunek);
 		//stav.push_back(round(rand() % 4 - 1));
@@ -71,6 +72,9 @@ void bunky::inicializace(double meritko, bool tum)
 	if (tum == 1)
 	{
 		// vytvoreni bunky tumoru
+		x[1] = posun_x; // uprostred kolonie
+		y[1] = posun_y;
+		z[1] = 0;
 		tumor[1] = 1;
 		prah_apop[1] = -1;
 		poskozeni[1] = 0;
@@ -325,9 +329,10 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 
 				// vytvoreni dcerinych bunek
-				kam_x = ((5.0 * ((rand() % 1001) / 1000.0)) - 0.5);
-				kam_y = ((5.0 * ((rand() % 1001) / 1000.0)) - 0.5);
-				kam_z = ((5.0 * ((rand() % 1001) / 1000.0)) - 0.5);
+				srand(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()); // opravdu nahodna cisla
+				kam_x = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				kam_y = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				kam_z = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
 
 				x.push_back(x[n] + kam_x);
 				x.push_back(x[n] - kam_x);
@@ -443,11 +448,11 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 	}
 
-// snizovani koncentrace metabolitu (lymf. system atd.)
-	for (size_t i = 0; i < (200*200*200); i++)
-	{
-		meta[i] = meta[i] * 0.9;
-	}
+//// snizovani koncentrace metabolitu (lymf. system atd.)
+//	for (size_t i = 0; i < (200*200*200); i++)
+//	{
+//		meta[i] = meta[i] * 0.9;
+//	}
 
 }
 

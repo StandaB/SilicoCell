@@ -5,8 +5,6 @@
 #include <SFML/OpenGL.hpp>
 #include "Mouse.h"
 #include "bunky.h"
-#include <string>
-#include <string.h>
 #include <sstream>
 
 using namespace std;
@@ -54,8 +52,8 @@ int main(int argc, char* const argv[])
 
 
 	double pom, pom2;
-
-	// GUI
+// GUI
+	system("cls"); // vymazani obsahu okna
 	if ((argc != 2) && (argc != 7)) { // chybne zadani
 		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model> <tumor>" << endl;
 		cout << "Napr. bunky 2000 2 150 150 1 y" << endl;
