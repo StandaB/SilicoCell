@@ -62,10 +62,10 @@ int main(int argc, char* const argv[])
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
-		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-		cout << "\nSilicoCell model\n\n\n";
+		cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+		cout << "\nSilicoCell model\n\n";
 
-		cout << "-Pro spravne nastaveni simulace je potreba zadat 6 parametru v nasledujicim poradi:\n";
+		cout << "Pro spravne nastaveni simulace je potreba zadat 6 parametru v nasledujicim poradi:\n";
 		cout << "	1. Pocet iteraci (jedna iterace odpovida jedne minute bunecneho cyklu)\n";
 		cout << "	2. Casove meritko (uroven zrychleni vypoctu: meritko 5 -> 1 iterace = 5 minut)\n";
 		cout << "		- optimalni rozsah 1 az 5\n";
@@ -78,8 +78,8 @@ int main(int argc, char* const argv[])
 		cout << "	5. prostorovy model rozlozeni latek\n";
 		cout << "		- 0 pro zadny model (idealni podminky)\n";
 		cout << "		- 1 pro plosny model\n";
-		cout << "		- 2 pro model cevy\n\n";
-		cout << "	6. simulace rustu tumoru (y/n)\n";
+		cout << "		- 2 pro model cevy\n";
+		cout << "	6. simulace rustu tumoru (y/n)\n\n";
 
 		cout << "Ovladani:\n";
 		cout << "-Leve tlacitko mysi + pohyb mysi: otaceni zobrazeni\n";
