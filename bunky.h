@@ -18,14 +18,13 @@ public:
 	//void bunky_cyklus(int od_x, int kam_x);
 	void bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber);
 	void inicializace(double meritko, bool tum);
-	void transform2(int poz_x, int poz_y, int poz_z);
+	void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
 	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
-	void zmena_rozliseni(int pos_x, int pos_y);
-	void onLeftButton(int mx, int my);
-	void onRightButton(int mx, float my);
 
-	int posun_x = 512;
-	int posun_y = 384 - 100;
+	//int posun_x = 512;
+	//int posun_y = 384 - 100;
+	int posun_x = 0;
+	int posun_y = 0;
 
 	vector<double> x;
 	vector<double> y;
@@ -35,11 +34,6 @@ public:
 	int pocet_A = 0;
 
 	vector<bool> tumor;
-
-	int mxnew = 0, mynew = 0;
-	int mxx = 0, myy = 0;
-	int mxold = 0, myold = 0;
-	float mznew = 0, mzz = 0, mzold = 0;
 
 	double* ECM_x = new double[200*200*200]; // velikost ECM pole
 	double* ECM_y = new double[200*200*200];

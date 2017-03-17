@@ -89,7 +89,7 @@ void bunky::inicializace(double meritko, bool tum)
 
 }
 
-void bunky::transform2(int poz_x, int poz_y, int poz_z)
+void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height)
 {
 	//// vypocet stredu pro otaceni
 	//prumer_x = 0;
@@ -110,21 +110,10 @@ void bunky::transform2(int poz_x, int poz_y, int poz_z)
 	glLoadIdentity();
 	glTranslatef(0, 0, -poz_z);
 
-	glTranslatef(posun_x, posun_y, 0);
+	glTranslatef((screen_width / 2), (screen_height / 2), 0);
 	glRotatef(poz_x, 0, 1, 0);
 	glRotatef(poz_y, 1, 0, 0); // rotace objektu uprostred
-	glTranslatef(-posun_x, -posun_y, 0);
-}
-
-void bunky::onLeftButton(int mx, int my)
-{
-	mxnew = mxold - mxx + mx;
-	mynew = myold - myy + my;
-}
-
-void bunky::onRightButton(int mx, float my)
-{
-	mznew = mzold - mzz + my;
+	glTranslatef(-(screen_width / 2), -(screen_height / 2), 0);
 }
 
 
@@ -567,7 +556,7 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 				dotyku[n] += 1;
 				//stav[n] = 0;
 			}
-			if (((do_y - posun_y) < 0.0))
+			if (((do_y - posun_y) > 0.0))
 			{
 				do_y = y[n];
 				dotyku[n] += 1;
@@ -580,17 +569,17 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 			}
 		}
 
-		// zamezeni rustu do zapornych cisel
-		if (do_y < 0.0)
-		{
-			do_y = y[n];
-			dotyku[n] += 1;
-		}
-		if (do_x < 0.0)
-		{
-			do_x = x[n];
-			dotyku[n] += 1;
-		}
+		//// zamezeni rustu do zapornych cisel
+		//if (do_y < 0.0)
+		//{
+		//	do_y = y[n];
+		//	dotyku[n] += 1;
+		//}
+		//if (do_x < 0.0)
+		//{
+		//	do_x = x[n];
+		//	dotyku[n] += 1;
+		//}
 
 		// posun bunek
 		x2[n] = (do_x);
@@ -604,10 +593,4 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 	x = x2;
 	y = y2;
 	z = z2;
-}
-
-void bunky::zmena_rozliseni(int pos_x, int pos_y)
-{
-	posun_x = pos_x / 2;
-	posun_y = (pos_y / 2) - 100;
 }

@@ -176,28 +176,40 @@ int main(int argc, char* const argv[])
 
 		// vypocet a zobrazeni
 		// zapnuti okna
-		sf::ContextSettings conset;
-		conset.antialiasingLevel = 4;
-		conset.depthBits = 24;
-		conset.stencilBits = 8;
-		conset.majorVersion = 3;
-		conset.minorVersion = 0;
+		sf::ContextSettings con_set;
+		con_set.antialiasingLevel = 4;
+		con_set.depthBits = 24;
+		con_set.stencilBits = 8;
+		con_set.majorVersion = 3;
+		con_set.minorVersion = 0;
 
+		float screen_width = round(0.75 * horizontal); // skoro fullscreen
+		float screen_height = round(0.75 * vertical);
 
-		sf::RenderWindow window(sf::VideoMode(1024, 768, 32), "SilicoCell Model", sf::Style::Close | sf::Style::Resize, conset);	// inicializace okna
+		sf::RenderWindow window(sf::VideoMode(screen_width, screen_height, 32), "SilicoCell Model", sf::Style::Close, con_set);	// inicializace okna
 
 		glClearDepth(1.f);
 		glClearColor(1.f, 1.f, 1.f, 0.f);
 		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		glDepthMask(GL_TRUE);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(0, 1024, 0, 768, -350, 350);
-		glScalef(1.0f, 1.0f, 1.0f);
+		glOrtho(0, screen_width, screen_height, 0, -350, 350);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glScalef((screen_width / 1280), (screen_height / 720), 1.0f);
 
 		window.setVerticalSyncEnabled(true);
 
+
 		bool odejit = 0;
+		int mxnew = 0, mynew = 0;
+		int mxx = 0, myy = 0;
+		int mxold = 0, myold = 0;
+		float mznew = 0, mzz = 0, mzold = 0;
+
 		while (window.isOpen() && !odejit) {
 			sf::Event Event;
 			while (window.pollEvent(Event)) {
@@ -214,39 +226,38 @@ int main(int argc, char* const argv[])
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
 						state = 1;
-						bunky.myy = sf::Mouse::getPosition(window).y;
-						bunky.mxx = sf::Mouse::getPosition(window).x; // ziskani pozice mysi pro otaceni
+						myy = sf::Mouse::getPosition(window).y;
+						mxx = sf::Mouse::getPosition(window).x;
 					}
-					bunky.onLeftButton(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
+					mxnew = mxold - mxx + sf::Mouse::getPosition(window).x;
+					mynew = myold + myy - sf::Mouse::getPosition(window).y;
 				}
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
 						state = 2;
-						bunky.mzz = sf::Mouse::getPosition(window).y; // ziskani pozice mysi pro posun v ose z - rez
+						mzz = sf::Mouse::getPosition(window).y;
 					}
-					bunky.onRightButton(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
+					mznew = mzold - mzz + sf::Mouse::getPosition(window).y;
 				}
 				if (Event.type == sf::Event::MouseButtonReleased)
 				{
 					if (state == 1)
 					{
-						bunky.mxold = bunky.mxnew; // ulozeni hodnot pozice mysi
-						bunky.myold = bunky.mynew;
+						mxold = mxnew;
+						myold = mynew;
 					}
 					else if (state == 2)
 					{
-						bunky.mzold = bunky.mznew;
+						mzold = mznew;
 					}
 					state = 0;
 				}
 			}
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			bunky.transform2(bunky.mxnew, bunky.mynew, bunky.mznew); // rotace podle polohy mysi
-
+			bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height); // rotace podle polohy mysi
 
 			// vypocet cyklu
 			if (pocet_iteraci < iteraci)
@@ -264,26 +275,9 @@ int main(int argc, char* const argv[])
 				cout << "pocet apoptoz: " << bunky.pocet_A << endl;
 				pocet_iteraci += 1;
 			}
-			//else
-			//{
-			//	cout << "vypnout program? A/N" << endl;
-			//	getline(cin, text);
-			//	if (text == "A" || text == "a")
-			//	{
-			//		odejit = 1;
-			//	}
-			//}
-
-			//if ((pocet_iteraci % 500) == 0)
-			//{
-			//	cout << pocet_iteraci << ": " << size(bunky.x) << endl;
-			//	//cout << bunky.prekryti[1] << endl;
-			//	//cout << bunky.dotyku[1] << endl;
-			//	//cout << bunky.r[1] << endl;
-			//}
-
 
 			// vykresleni
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_POINT_SMOOTH);
 			//glPointSize(5); // bodova mrizka
 			//glColor3f(0.0, 0.0, 0.0);
@@ -351,12 +345,16 @@ int main(int argc, char* const argv[])
 					}
 				}
 
-				glVertex3f(bunky.x[i], bunky.y[i], bunky.z[i]);
+				glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
 				glEnd();
 
 			}
 
 			window.display(); // zobrazeni
+
+			//glMatrixMode(GL_MODELVIEW);
+			//glLoadIdentity();
+			//glPopMatrix();
 		}
 	}
 
