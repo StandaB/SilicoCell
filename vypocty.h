@@ -12,8 +12,9 @@ using namespace std;
 class vypocty {
 public:
 	double ziviny(double xx, double yy, double zz, int vyber);
+	double kyslik(double xx, double yy, double zz, int vyber);
 	double toxiny(double xx, double yy, double zz, int vyber);
-	double mitogeny(double xx, double yy, double zz, int vyber);
+	//double mitogeny(double xx, double yy, double zz, int vyber);
 	double RF(double xx, double yy, double zz, int vyber);
 	double vysledek;
 

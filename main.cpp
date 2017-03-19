@@ -89,13 +89,19 @@ int main(int argc, char* const argv[])
 	}
 	else if ((strcmp(argv[1], "s") == 0) || strcmp(argv[1], "-s") == 0) { // standardni nastaveni
 		iteraci = 5000;
-		meritko = 2;
+		meritko = 2.5;
+		omezeni = 1;
 		omezeni_x = 200;
 		omezeni_z = 200;
 		vyber = 1;
 		tum = 1;
 		pokracovat = 1;
 	}
+
+//// testovani
+//	pokracovat = 1;
+//	meritko = 2;
+//	iteraci = 2000;
 
 	if (argc == 7 || pokracovat == 1)
 	{
@@ -256,8 +262,10 @@ int main(int argc, char* const argv[])
 				}
 			}
 
-
-			bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height); // rotace podle polohy mysi
+			if (state > 0)
+			{
+				bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height); // rotace podle polohy mysi
+			}
 
 			// vypocet cyklu
 			if (pocet_iteraci < iteraci)

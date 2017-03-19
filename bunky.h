@@ -24,7 +24,7 @@ public:
 	//int posun_x = 512;
 	//int posun_y = 384 - 100;
 	int posun_x = 0;
-	int posun_y = 0;
+	int posun_y = 50;
 
 	vector<double> x;
 	vector<double> y;
@@ -35,19 +35,25 @@ public:
 
 	vector<bool> tumor;
 
-	double* ECM_x = new double[200*200*200]; // velikost ECM pole
-	double* ECM_y = new double[200*200*200];
-	double* ECM_z = new double[200*200*200];
+	//double* ECM_x = new double[200*200*200]; // velikost ECM pole
+	//double* ECM_y = new double[200*200*200];
+	//double* ECM_z = new double[200*200*200];
 
 	double* meta = new double[200*200*200]; // velikost pole metabolitu
+
+	vector<double> prah_ziviny;
+	vector<double> prah_deleni;
+	vector<double> delka_cyklu;
+	vector<double> metabolismus;
 	
 private:
 	vypocty vypocty;
 
 	double kolik_zivin;
+	double kyslik;
 	double kolik_RF;
 	double kolik_toxinu;
-	double kolik_mitogenu;
+	//double kolik_mitogenu;
 
 	// parametry kolonie
 	int kolonie = 100;
@@ -63,12 +69,8 @@ private:
 	vector<double> prekryti;
 
 	vector<double> rust;
-	vector<double> delka_cyklu;
 	vector<double> trvani_cyklu;
-	vector<double> prah_ziviny;
 	vector<double> prah_poskozeni;
-	vector<double> prah_deleni;
-	vector<double> metabolismus;
 
 	double prumer_x;
 	double prumer_y;
