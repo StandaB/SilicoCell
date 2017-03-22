@@ -92,9 +92,9 @@ void bunky::inicializace(double meritko, bool tum)
 void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height)
 {
 	// vypocet stredu pro otaceni
-	prumer_x = 0;
-	prumer_y = 0;
-	for (size_t i = 0; i < size(x); i=i+2)
+	prumer_x = 0.0;
+	prumer_y = 0.0;
+	for (size_t i = 0; i < size(x); i++)
 	{
 		prumer_x = prumer_x + x[i];
 		prumer_y = prumer_y + y[i];
@@ -176,7 +176,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 		int kde_x = round(x[n] / 20.0);
 		int kde_y = round(y[n] / 20.0);
 		int kde_z = round(z[n] / 20.0);
-		int f = kde_x + (kde_y + 200 - 1) + (kde_z + ((200 - 1) * (200 - 1)));
+		int f = kde_x + (kde_y + 100 - 1) + (kde_z + ((100 - 1) * (100 - 1)));
 
 		for (size_t r = 0; r < 20; r++)
 		{
@@ -493,10 +493,20 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z)
 {
 	kolik = size(x);
-	vector<double> x2(kolik);
-	vector<double> y2(kolik);
-	vector<double> z2(kolik);
 
+	//vector<double> vzdsti(kolik*kolik);
+	//for (size_t i = 0; i < kolik-1; i++)
+	//{
+	//	for (size_t j = i+1; j < kolik; j++)
+	//	{
+	//		vzd_xx = (x[j] - x[i]);
+	//		vzd_yy = (y[j] - y[i]);
+	//		vzd_zz = (z[j] - z[i]);
+	//		vzdsti[i+j-1] = sqrt(pow(vzd_xx, 2.0) + pow(vzd_yy, 2.0) + pow(vzd_zz, 2.0)) - (r[j] + r[i]);
+	//	}
+	//}
+
+#pragma loop(hint_parallel(2)) 
 	for (size_t n = 0; n < kolik; n++)
 	{
 		touch = 0;
@@ -634,15 +644,9 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 		//}
 
 		// posun bunek
-		x2[n] = (do_x);
-		y2[n] = (do_y);
-		z2[n] = (do_z);
+		x[n] = (do_x);
+		y[n] = (do_y);
+		z[n] = (do_z);
 		
 	}
-	x.clear();
-	y.clear();
-	z.clear();
-	x = x2;
-	y = y2;
-	z = z2;
 }

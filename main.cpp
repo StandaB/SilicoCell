@@ -5,6 +5,8 @@
 #include <SFML/OpenGL.hpp>
 #include "bunky.h"
 #include <sstream>
+//#include <thread>
+
 
 using namespace std;
 
@@ -18,8 +20,23 @@ void GetDesktopResolution(int& horizontal, int& vertical)
 	vertical = desktop.bottom;
 }
 
+//void moveit(double meritko, bool omezeni, double omezeni_x, double omezeni_z, int od, int kolik)
+//{
+//	#ifndef b
+//	bunky b;
+//	#endif // !bunky
+//
+//	for (size_t i = od; i < kolik; i++)
+//	{
+//		b.pohyb(meritko, omezeni, omezeni_x, omezeni_z, i);
+//	}
+//	
+//}
+
 int main(int argc, char* const argv[])
 {
+	//std::thread t[4];
+
 	int horizontal = 0;
 	int vertical = 0;
 	GetDesktopResolution(horizontal, vertical); // velikost obrazovky
@@ -98,7 +115,7 @@ int main(int argc, char* const argv[])
 		pokracovat = 1;
 	}
 
-//// testovani
+////// testovani
 //	pokracovat = 1;
 //	meritko = 2;
 //	iteraci = 2000;
@@ -270,7 +287,20 @@ int main(int argc, char* const argv[])
 			// vypocet cyklu
 			if (pocet_iteraci < iteraci)
 			{
+				
 				bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);
+
+				//int od = 0;
+				//int po = size(bunky.x);
+				////t[0] = thread(&bunky::pohyb, meritko, omezeni, omezeni_x, omezeni_z, od, po);
+				//t[1] = thread(moveit, meritko, omezeni, omezeni_x, omezeni_z, od, po);
+				////t[2] = thread(moveit, meritko, omezeni, omezeni_x, omezeni_z, od, kolik);
+				////t[3] = thread(moveit, meritko, omezeni, omezeni_x, omezeni_z, od, kolik);
+				//t[0].join();
+				//t[1].join();
+				//t[2].join();
+				//t[3].join();
+
 				bunky.bunky_cyklus(t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber);
 
 				pocet_iteraci += 1;
