@@ -20,19 +20,6 @@ void GetDesktopResolution(int& horizontal, int& vertical)
 	vertical = desktop.bottom;
 }
 
-//void moveit(double meritko, bool omezeni, double omezeni_x, double omezeni_z, int od, int kolik)
-//{
-//	#ifndef b
-//	bunky b;
-//	#endif // !bunky
-//
-//	for (size_t i = od; i < kolik; i++)
-//	{
-//		b.pohyb(meritko, omezeni, omezeni_x, omezeni_z, i);
-//	}
-//	
-//}
-
 int main(int argc, char* const argv[])
 {
 	//std::thread t[4];
@@ -308,38 +295,16 @@ int main(int argc, char* const argv[])
 			}
 			else if (pocet_iteraci == iteraci)
 			{
-				cout << "\n\nkonec" << endl; // ukonceni vypoctu
+				cout << "\n\nKonec simulace." << endl; // ukonceni vypoctu
 											 //cout << "\nkonecny pocet bunek: " << size(bunky.x) << endl;
-				cout << "pocet apoptoz: " << bunky.pocet_A << endl;
+				//cout << "pocet apoptoz: " << bunky.pocet_A << endl;
 				pocet_iteraci += 1;
 			}
 
 			// vykresleni
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_POINT_SMOOTH);
-			//glPointSize(5); // bodova mrizka
-			//glColor3f(0.0, 0.0, 0.0);
-			//glBegin(GL_POINTS);
-			//glVertex3f(0.0, 0.0, 0.0);
-			//glVertex3f(30.0, 30.0, 30.0);
-			//glVertex3f(30.0, 0.0, 0.0);
-			//glVertex3f(0.0, 30.0, 0.0);
-			//glVertex3f(0.0, 0.0, 30.0);
-			//glVertex3f(0.0, 30.0, 30.0);
-			//glVertex3f(30.0, 30.0, 0.0);
-			//glVertex3f(30.0, 0.0, 30.0);
-			//glEnd();
-			//glPointSize(30);
-			//glBegin(GL_POINTS);
-			//glVertex3f(15.0, 15.0, 15.0);
-			//glEnd();
-			//sf::CircleShape shape(30);
-			//shape.setPosition(100, 100);
-			//shape.setFillColor(sf::Color(100, 250, 50));
-			//App.draw(shape);
 
-
-			//window.clear();
 			for (size_t i = 0; i < size(bunky.x); i++)
 			{
 				glPointSize((2.f * bunky.r[i]));
@@ -389,10 +354,6 @@ int main(int argc, char* const argv[])
 			}
 
 			window.display(); // zobrazeni
-
-			//glMatrixMode(GL_MODELVIEW);
-			//glLoadIdentity();
-			//glPopMatrix();
 		}
 	}
 

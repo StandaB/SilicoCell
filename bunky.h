@@ -15,14 +15,12 @@ using namespace std;
 class bunky {
 
 public:
-	//void bunky_cyklus(int od_x, int kam_x);
 	void bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber);
 	void inicializace(double meritko, bool tum);
 	void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
 	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
 
-	//int posun_x = 512;
-	//int posun_y = 384 - 100;
+
 	int posun_x = 0;
 	int posun_y = 50;
 
@@ -39,7 +37,10 @@ public:
 	//double* ECM_y = new double[200*200*200];
 	//double* ECM_z = new double[200*200*200];
 
-	double* meta = new double[200*200*200]; // velikost pole metabolitu
+	int meze = 125;
+	double* meta = new double[meze * meze * meze]; // velikost pole metabolitu
+	//double* RuFa = new double[meze * meze * meze]; // velikost pole rustovych faktoru pro bunky generujici RF
+	double* zvny = new double[meze * meze * meze]; // velikost pole zivin (odecet od kolik_zivin podle metabolismu bunek)
 
 	vector<double> prah_ziviny;
 	vector<double> prah_deleni;
@@ -53,7 +54,8 @@ private:
 	double kyslik;
 	double kolik_RF;
 	double kolik_toxinu;
-	//double kolik_mitogenu;
+
+	bool preskok = 0;
 
 	// parametry kolonie
 	int kolonie = 100;
@@ -102,7 +104,7 @@ private:
 	double max_vzd = 100; // vzdalenost od stredu - pozice > max_vzd -> prechazi do G0 = omezeni oblasti vypoctu
 	int poc_dot = 4; // maximalni pocet dotyku pro vstup do G1
 
-
+	double snizovani = 0.9;
 
 	int mark1, mark2, mark3, mark4;
 	
