@@ -5,11 +5,11 @@
 bunky b;
 
 
-double vypocty::ziviny(double xx, double yy, double zz, int vyber)
+double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor)
 {
 	if (vyber == 1)
 	{
-		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / 100.0)); // gradient (normalne "/ 1000.0", 10.0 pro zvyrazneni efektu)
+		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)); // gradient (normalne "/ 1000.0", 10.0 pro zvyrazneni efektu)
 	}
 	else if (vyber == 2)
 	{
@@ -26,11 +26,11 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber)
 	return(vysledek);
 }
 
-double vypocty::kyslik(double xx, double yy, double zz, int vyber)
+double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor)
 {
 	if (vyber == 1)
 	{
-		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / 100.0)); // gradient (normalne "/ 1000.0", 100.0 pro zvyrazneni efektu)
+		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)); // gradient (normalne "/ 1000.0", 100.0 pro zvyrazneni efektu)
 	}
 	else if (vyber == 2)
 	{
@@ -47,11 +47,11 @@ double vypocty::kyslik(double xx, double yy, double zz, int vyber)
 	return(vysledek);
 }
 
-double vypocty::toxiny(double xx, double yy, double zz, int vyber)
+double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor)
 {
 	//if (vyber == 1)
 	//{
-	//	vysledek = 1 - pow((1.0 / 2.0), (abs(yy - b.posun_y) / 100.0));
+	//	vysledek = 1 - pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor));
 	//}
 	//else if (vyber == 2)
 	//{
@@ -69,11 +69,11 @@ double vypocty::toxiny(double xx, double yy, double zz, int vyber)
 	return(vysledek);
 }
 
-double vypocty::RF(double xx, double yy, double zz, int vyber)
+double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor)
 {
 	if (vyber == 1)
 	{
-		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / 100.0));
+		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor));
 	}
 	else if (vyber == 2)
 	{

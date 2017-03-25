@@ -6,12 +6,42 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 #include <chrono>
+#include <fstream>
+#include <string>
+
 
 void bunky::inicializace(double meritko, bool tum)
 {
 	srand(time(0)); // inicializace generatoru nahodnych cisel
 
+	// nacteni parametru z config.ini
+	string prvni, druhy;
+	vector<double> param;
+	ifstream soubor("config.ini");
+	if (soubor.is_open())
+	{
+		while (soubor >> prvni >> druhy) // kazde volani getline skoci na dalsi radek, na konci = 0
+		{
+			param.push_back(std::stoi(druhy));
+			//cout << druhy << endl;
+		}
+		soubor.close();
 
+		// zapis parametru do promennych
+		int zf = 1; // zacatek nastaveni BUNKY
+		kolonie = param[zf];
+		r_bunek = param[zf + 1];
+		preskok = param[zf + 2];
+		meze = param[zf + 3];
+		rozl = param[zf + 4];
+		poc_dot = param[zf + 5];
+		snizovani = param[zf + 6];
+		oprava = param[zf + 7]; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
+		prostor = param[zf + 16]; // vstup do vypoctu prostorovych koncentraci
+	}
+	
+
+	// inicializace pocatecni kolonie
 	for (size_t i = 0; i < kolonie; i++)
 	{
 		x.push_back(posun_x + (30 * (((rand() % 1001) / 1000.0) - 0.5)));
@@ -36,7 +66,6 @@ void bunky::inicializace(double meritko, bool tum)
 		trvani_cyklu.push_back(0); // aktualni doba v cyklu
 
 	}
-	oprava = 0.01; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
 
 // generovani ECM
 	for (size_t i = 0; i < (meze*meze*meze); i++)
@@ -45,7 +74,7 @@ void bunky::inicializace(double meritko, bool tum)
 		//double c2 = (rand() % 1001) / 1000.0;
 		//double c3 = (rand() % 1001) / 1000.0;
 		//double soucet_c = c1 + c2 + c3;
-		//ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um)
+		//ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um nebo rozl)
 		//ECM_y[i] = c2 / soucet_c;
 		//ECM_z[i] = c3 / soucet_c;
 
@@ -60,9 +89,8 @@ void bunky::inicializace(double meritko, bool tum)
 		//ECM_z[i] = 1;
 
 
-		meta[i] = 0; // koncentrace metabolitu v oblastech (1x1x1 meta = 20x20x20 um)
-		//RuFa[i] = 0; // rustovy faktor
-		zvny[i] = 0; // ziviny
+		meta.push_back(0); // koncentrace metabolitu v oblastech (1x1x1 meta = 20x20x20 um nebo podle rozl)
+		zvny.push_back(0); // ziviny v prostoru
 	}
 
 	if (tum == 1)
@@ -113,15 +141,15 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 	{
 
 		// koncentrace latek v okoli bunky
-		kolik_zivin = vypocty.ziviny(x[n], y[n], z[n], vyber);
-		kyslik = vypocty.kyslik(x[n], y[n], z[n], vyber);
-		kolik_RF = vypocty.RF(x[n], y[n], z[n], vyber);
-		kolik_toxinu = vypocty.toxiny(x[n], y[n], z[n], vyber);
+		kolik_zivin = vypocty.ziviny(x[n], y[n], z[n], vyber, prostor);
+		kyslik = vypocty.kyslik(x[n], y[n], z[n], vyber, prostor);
+		kolik_RF = vypocty.RF(x[n], y[n], z[n], vyber, prostor);
+		kolik_toxinu = vypocty.toxiny(x[n], y[n], z[n], vyber, prostor);
 
 		// metabolity
-		int kde_x = round(x[n] / 20.0);
-		int kde_y = round(y[n] / 20.0);
-		int kde_z = round(z[n] / 20.0);
+		int kde_x = round(x[n] / rozl);
+		int kde_y = round(y[n] / rozl);
+		int kde_z = round(z[n] / rozl);
 		int f = kde_x + (kde_y + meze - 1) + (kde_z + ((meze - 1) * (meze - 1)));
 		double mtb = meta[f];
 		double ziv = zvny[f];
@@ -315,7 +343,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				}
 
 				// restrikcni bod
-				if ((mark1 + mark2 + mark4) == 3)
+				if ((mark1 + mark2 + mark3) == 3)
 				{
 					stav[n] = 2; // vstup do bunecneho cyklu
 					trvani_cyklu[n] = 0;
@@ -514,11 +542,11 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 		en2 = abs(sqrt(pow(en_x2, 2.0) + pow(en_y2, 2.0) + pow(en_z2, 2.0)));
 
 		// vypocet posuvu
-		//int kde_x = round(x[n] / 20.0);
-		//int kde_y = round(y[n] / 20.0);
-		//int kde_z = round(z[n] / 20.0);
+		//int kde_x = round(x[n] / rozl);
+		//int kde_y = round(y[n] / rozl);
+		//int kde_z = round(z[n] / rozl);
 		//
-		//int f = kde_x + (kde_y + meze - 1) + (kde_z + ((meze - 1) * (meze - 1))); // pro pocet oblasti ECM 200*200*200. 1 oblast = 20*20*20 um
+		//int f = kde_x + (kde_y + meze - 1) + (kde_z + ((meze - 1) * (meze - 1))); // pro pocet oblasti ECM 200*200*200. 1 oblast = 20*20*20 um nebo podle rozl
 		//
 		//if (en1 >= en2) // prioritu ma rozdeleni bunek pred priblizenim
 		//{

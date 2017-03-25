@@ -30,6 +30,7 @@ public:
 	vector<double> r;
 	vector<int> stav;
 	int pocet_A = 0;
+	double prostor;
 
 	vector<bool> tumor;
 
@@ -38,9 +39,10 @@ public:
 	//double* ECM_z = new double[200*200*200];
 
 	int meze = 125;
-	double* meta = new double[meze * meze * meze]; // velikost pole metabolitu
-	//double* RuFa = new double[meze * meze * meze]; // velikost pole rustovych faktoru pro bunky generujici RF
-	double* zvny = new double[meze * meze * meze]; // velikost pole zivin (odecet od kolik_zivin podle metabolismu bunek)
+	int rozl = 20;
+	////double* RuFa = new double[meze * meze * meze]; // velikost pole rustovych faktoru pro bunky generujici RF
+	vector<double> meta; // pole metabolitu
+	vector<double> zvny; // pole zivin (odecet od kolik_zivin podle metabolismu bunek)
 
 	vector<double> prah_ziviny;
 	vector<double> prah_deleni;
@@ -101,7 +103,7 @@ private:
 
 	int kolik;
 
-	double max_vzd = 100; // vzdalenost od stredu - pozice > max_vzd -> prechazi do G0 = omezeni oblasti vypoctu
+	//double max_vzd = 100; // vzdalenost od stredu - pozice > max_vzd -> prechazi do G0 = omezeni oblasti vypoctu
 	int poc_dot = 4; // maximalni pocet dotyku pro vstup do G1
 
 	double snizovani = 0.9;

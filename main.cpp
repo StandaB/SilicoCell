@@ -5,6 +5,8 @@
 #include <SFML/OpenGL.hpp>
 #include "bunky.h"
 #include <sstream>
+#include <fstream>
+#include <string>
 //#include <thread>
 
 
@@ -36,7 +38,7 @@ int main(int argc, char* const argv[])
 	double omezeni_z = 200.0;
 	int vyber = 1;
 
-	////////////////////////////////////////// nastaveni casu
+	// // casy // //
 	double meritko = 1.0;
 	// casy z[1], v minutach
 	double t_G1 = 660.0;
@@ -44,11 +46,31 @@ int main(int argc, char* const argv[])
 	double t_G2 = 240.0;
 	double t_M = 60.0;
 	double t_Apop = 180.0; // zdroj[30]
-	double t_regulace_velikosti = 1440.0; // za 24 hodin se zmeni polomer o 1 um(najit zdroj!!)
 	double t_cekani = 50.0; // cekani v G0(najit zdroj!!)
-									  // (J.Biol.Chem. - 1996 - Loyer - 11484 - 92.pdf, http://www.nature.com/articles/srep04012, 
-									  // http ://mcb.asm.org/content/23/7/2351.abstract, http://www.nature.com/onc/journal/v19/n49/full/1203858a.html)
+							// (J.Biol.Chem. - 1996 - Loyer - 11484 - 92.pdf, http://www.nature.com/articles/srep04012, 
+							// http ://mcb.asm.org/content/23/7/2351.abstract, http://www.nature.com/onc/journal/v19/n49/full/1203858a.html)
 
+	// prepsani parametru casu z config.ini
+	string prvni, druhy;
+	vector<double> param;
+	ifstream soubor("config.ini");
+	if (soubor.is_open())
+	{
+		while (soubor >> prvni >> druhy) // kazde volani getline skoci na dalsi radek, na konci = 0
+		{
+			param.push_back(std::stoi(druhy));
+		}
+		soubor.close();
+
+		// zapis parametru do promennych
+		int zf = 10; // zacatek nastaveni MAIN
+		t_G1 = param[zf];
+		t_S = param[zf + 1];
+		t_G2 = param[zf + 2];
+		t_M = param[zf + 3];
+		t_Apop = param[zf + 4];
+		t_cekani = param[zf + 5];
+	}
 
 	int state = 0;
 	double pom, pom2;
@@ -226,6 +248,8 @@ int main(int argc, char* const argv[])
 				if (Event.type == sf::Event::Closed)
 				{
 					window.close();
+					//delete[] bunky.meta;
+					//delete[] bunky.zvny;
 				}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				{
