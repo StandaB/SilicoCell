@@ -22,24 +22,26 @@ void bunky::inicializace(double meritko, bool tum)
 	{
 		while (soubor >> prvni >> druhy) // kazde volani getline skoci na dalsi radek, na konci = 0
 		{
-			param.push_back(std::stoi(druhy));
+			param.push_back(std::stod(druhy));
 			//cout << druhy << endl;
 		}
 		soubor.close();
 
 		// zapis parametru do promennych
-		int zf = 1; // zacatek nastaveni BUNKY
-		kolonie = param[zf];
-		r_bunek = param[zf + 1];
-		preskok = param[zf + 2];
-		meze = param[zf + 3];
-		rozl = param[zf + 4];
-		poc_dot = param[zf + 5];
-		snizovani = param[zf + 6];
-		oprava = param[zf + 7]; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
-		prostor = param[zf + 16]; // vstup do vypoctu prostorovych koncentraci
+		int zf = 8; // zacatek nastaveni VYPOCTY
+		prostor = param[zf]; // vstup do vypoctu prostorovych koncentraci
+		kolonie = param[zf + 2];
+		r_bunek = param[zf + 3];
+		preskok = param[zf + 4];
+		meze = param[zf + 5];
+		rozl = param[zf + 6];
+		poc_dot = param[zf + 7];
+		snizovani = param[zf + 8];
+		oprava = param[zf + 9]; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
+		metabolismus_0 = param[zf + 10];
+		deska = param[zf + 11];
+		supresory = param[zf + 12];
 	}
-	
 
 	// inicializace pocatecni kolonie
 	for (size_t i = 0; i < kolonie; i++)
@@ -60,6 +62,7 @@ void bunky::inicializace(double meritko, bool tum)
 		dotyku.push_back(0);
 		prekryti.push_back(0);
 		tumor.push_back(0); // oznaceni zdravych bunek
+		navrat.push_back(1);
 
 		rust.push_back((r[i] * pow(2.0, (1.0 / 3.0)) - r[i]) / (780 / meritko)); // krok zmeny velikosti
 		delka_cyklu.push_back(780 / meritko); // nastavena delka cyklu
@@ -103,7 +106,10 @@ void bunky::inicializace(double meritko, bool tum)
 		prah_apop[1] = -1;
 		poskozeni[1] = 0;
 		rust[1] = (r[1] * pow(2.0, (1.0 / 3.0)) - r[1]) / delka_cyklu[1];
-		prah_poskozeni[1] = 2; // rozsah <0,1>, 2 = poskozeni nema vliv
+		if (supresory)
+		{
+			prah_poskozeni[1] = 2; // rozsah <0,1>, 2 = poskozeni nema vliv
+		}
 	}
 
 }
@@ -152,18 +158,20 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 		int kde_z = round(z[n] / rozl);
 		int f = kde_x + (kde_y + meze - 1) + (kde_z + ((meze - 1) * (meze - 1)));
 		double mtb = meta[f];
-		double ziv = zvny[f];
+		double ziv = zvny[f]; // spotreba zivin v regionu f
 		kolik_zivin = kolik_zivin - ziv;
+		if (kolik_zivin < 0)
+		{
+			kolik_zivin = 0;
+		}
+		if (kolik_RF < 0)
+		{
+			kolik_RF = 0;
+		}
 
 // poskozeni
-		if (!tumor[n])
-		{
-			poskozeni[n] += kolik_toxinu / 1000; // podle toxinu v okoli
-		}
-		else
-		{
-			poskozeni[n] = 0;
-		}
+		poskozeni[n] += kolik_toxinu / 1000; // podle toxinu v okoli
+
 	// // zpracovani signalnich drah - vypocet parametru (delka cyklu, velikost bunky) // //
 		delka_cyklu[n] = t_S + t_G2 + t_M; // delka cyklu
 		if (tumor[n] == 1)
@@ -186,14 +194,18 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 		prah_ziviny[n] = 0.2 * Akt;
 
-		int prechod_G1 = 0;
+		bool prechod_G1 = 0;
 		if ((kolik_zivin >= prah_ziviny[n]) && (Akt == 1))
+		{
+			prechod_G1 = 1;
+		}
+		else if (tumor[n] == 1)
 		{
 			prechod_G1 = 1;
 		}
 
 
-		double metabolismus_0 = 0.05, HIF1 = 0, PHD = 0, PDH = 0;
+		double HIF1 = 0, PHD = 0, PDH = 0;
 
 		PHD = (1 - mtb) * (kyslik);
 		HIF1 = (round((Akt + metabolismus[n])) / 2.0) * (1 - PHD);
@@ -210,8 +222,8 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 		{
 			mtb = 1;
 		}
-		meta[f] = mtb;
-		zvny[f] = metabolismus[n]; // spotreba zivin odpovida rychlosti metabolismu
+		meta[f] = mtb; // mnozstvi metabolitu v prostoru
+		zvny[f] = 2 * metabolismus[n]; // spotreba zivin odpovida rychlosti metabolismu (50% ucinnost)
 
 		delka_cyklu[n] = (delka_cyklu[n] * (1 - metabolismus[n])) / meritko; // rychlejsi metabolismus -> kratsi cyklus
 
@@ -247,6 +259,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				dotyku.erase(dotyku.begin() + n);
 				prekryti.erase(prekryti.begin() + n);
 				tumor.erase(tumor.begin() + n);
+				navrat.erase(navrat.begin() + n);
 
 				pocet_A = pocet_A + 1;
 				kolik = size(x);
@@ -258,14 +271,14 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 			doba_zivota[n] += 1;
 
+
 // regulace velikosti (podle zivin a RF)
 			//poz_r[n]; // pozadovana velikost bunky (15 pro kuzi)
 
 
-
-
 // regulace poctu (utlacovane jsou ve stresu -> vyssi pst apoptozy)
-			poskozeni[n] += kolik_toxinu / 1000;
+			kolik_toxinu += mtb;
+			poskozeni[n] += (kolik_toxinu / 1000.0) * (1 + tumor[n]); // tumor ma vic poskozeni (mutace)
 			if (prekryti[n] > 10)
 			{
 				poskozeni[n] += 0.001;
@@ -274,7 +287,11 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 
 			// ne-/vratna faze G0 (podle poskozeni DNA)
 			mark1 = 0;
-			if (dotyku[n] <= poc_dot) // podle[26] zavisi na poctu dotyku(hustote prostredi)
+			if ((poskozeni[n] >= 0.25))
+			{
+				navrat[n] = 0;
+			}
+			if ((dotyku[n] <= poc_dot) && navrat[n]) // podle[26] zavisi na poctu dotyku(hustote prostredi)
 			{
 				trvani_cyklu[n] += 1; // jak dlouho jsou priznive podminky(= synteza proteinu)
 				if (trvani_cyklu[n] > (t_cekani / meritko)) // cekani na syntezu proteinu
@@ -291,18 +308,28 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				}
 			}
 
+
 			if ((mark1 + prechod_G1) == 2)
 			{
 				stav[n] = 1; // vstup do G1
 				trvani_cyklu[n] = 0;
 			}
 
-			if (kolik_RF < prah_deleni[n]) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
+			if (kolik_RF < 0.01) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
 			{
 				stav[n] = -1; // apoptoza
 				trvani_cyklu[n] = 0;
 			}
-
+			if (kolik_zivin < 0.01)
+			{
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
+			if (kyslik < 0.01)
+			{
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
 			if (poskozeni[n] > prah_poskozeni[n])
 			{
 				stav[n] = -1; // apoptoza
@@ -317,14 +344,26 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			trvani_cyklu[n] += 1; // doba ve fazi
 
 			mark3 = 1;
-			if (!tumor[n] && (dotyku[n] > poc_dot)) // maximalni pocet povolenych dotyku, pro tumor nema efekt
+			if ((dotyku[n] > poc_dot) && ((tumor[n] - supresory) != 1)) // maximalni pocet povolenych dotyku, pro tumor bez supresoru nema efekt
 			{
 				mark3 = 0;
 				stav[n] = 0; // prechod do G0
 				trvani_cyklu[n] = 0;
 			}
+			if ((kolik_zivin == 0) && ((tumor[n] - supresory) != 1))
+			{
+				mark3 = 0;
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
+			if ((kyslik == 0) && ((tumor[n] - supresory) != 1))
+			{
+				mark3 = 0;
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
 
-			if (trvani_cyklu[n] > (t_G1 / meritko))
+			if ((trvani_cyklu[n] > (t_G1 / meritko)) && (stav[n] == 1))
 			{
 				mark1 = 1;
 				if (!prechod_G1)
@@ -351,7 +390,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 			}
 
 			// tumor preskakuje G1
-			if ((preskok + tumor[n]) == 2)
+			if (((preskok + tumor[n]) == 2) && (stav[n] == 1))
 			{
 				stav[n] = 2; // vstup do bunecneho cyklu
 				trvani_cyklu[n] = 0;
@@ -424,6 +463,8 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				prekryti.push_back(0);
 				tumor.push_back(tumor[n]);
 				tumor.push_back(tumor[n]);
+				navrat.push_back(navrat[n]);
+				navrat.push_back(navrat[n]);
 				
 				// vymazani materske bunky
 				x.erase(x.begin() + n);
@@ -445,6 +486,7 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 				dotyku.erase(dotyku.begin() + n);
 				prekryti.erase(prekryti.begin() + n);
 				tumor.erase(tumor.begin() + n);
+				navrat.erase(navrat.begin() + n);
 
 			}
 
@@ -459,15 +501,15 @@ void bunky::bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, doubl
 // // mutace ?
 
 
-		poskozeni[n] = poskozeni[n] * (1 - oprava); // opravne mechanismy bunky
+		poskozeni[n] = poskozeni[n] * (1 - (oprava * meritko)); // opravne mechanismy bunky
 
 	}
 
 	//snizovani koncentrace metabolitu (lymf. system atd.)
 	for (size_t i = 0; i < (meze*meze*meze); i++)
 	{
-		meta[i] = meta[i] * snizovani;
-		zvny[i] = zvny[i] * snizovani;
+		meta[i] = meta[i] * (1 - (snizovani * meritko));
+		zvny[i] = zvny[i] * (1 - (snizovani * meritko));
 	}
 
 }
@@ -585,10 +627,13 @@ void bunky::pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni
 				dotyku[n] += 1;
 				//stav[n] = 0;
 			}
-			if (((do_y - posun_y) > 0.0))
+			if (deska == 1)
 			{
-				do_y = y[n];
-				dotyku[n] += 1;
+				if (((do_y - posun_y) > 0.0))
+				{
+					do_y = y[n];
+					dotyku[n] += 1;
+				}
 			}
 			if ((abs(do_z) > omezeni_z))
 			{

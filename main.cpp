@@ -7,12 +7,15 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <time.h>
+#include <chrono>
 //#include <thread>
 
 
 using namespace std;
 
 
+// rozliseni displeje
 void GetDesktopResolution(int& horizontal, int& vertical)
 {
 	RECT desktop;
@@ -20,6 +23,14 @@ void GetDesktopResolution(int& horizontal, int& vertical)
 	GetWindowRect(hDesktop, &desktop);
 	horizontal = desktop.right;
 	vertical = desktop.bottom;
+}
+
+// nacteni aktulniho casu pro logovani
+static char *aktualni_cas(char *delka) {
+	time_t cas = time(0);
+#pragma warning(disable : 4996) //_CRT_SECURE_NO_WARNINGS
+	strftime(delka, 30, "%d.%m.%Y %H:%M:%S", localtime(&cas));
+	return delka;
 }
 
 int main(int argc, char* const argv[])
@@ -33,7 +44,7 @@ int main(int argc, char* const argv[])
 	int iteraci;
 	int pocet_iteraci = 0;
 
-	bool omezeni = 0, tum = 0, pokracovat = 0;
+	bool tum = 0, pokracovat = 0;
 	double omezeni_x = 200.0;
 	double omezeni_z = 200.0;
 	int vyber = 1;
@@ -58,12 +69,12 @@ int main(int argc, char* const argv[])
 	{
 		while (soubor >> prvni >> druhy) // kazde volani getline skoci na dalsi radek, na konci = 0
 		{
-			param.push_back(std::stoi(druhy));
+			param.push_back(std::stod(druhy));
 		}
 		soubor.close();
 
 		// zapis parametru do promennych
-		int zf = 10; // zacatek nastaveni MAIN
+		int zf = 1; // zacatek nastaveni MAIN
 		t_G1 = param[zf];
 		t_S = param[zf + 1];
 		t_G2 = param[zf + 2];
@@ -71,9 +82,49 @@ int main(int argc, char* const argv[])
 		t_Apop = param[zf + 4];
 		t_cekani = param[zf + 5];
 	}
+	else
+	{
+		ofstream soubor("config.ini"); // vytvoreni konfigu kdyz neexistuje
+
+		soubor << "=MAIN= 0" << endl;
+		soubor << "t_G1 660" << endl;
+		soubor << "t_S 480" << endl;
+		soubor << "t_G2 240" << endl;
+		soubor << "t_M 60" << endl;
+		soubor << "t_Apop 180" << endl;
+		soubor << "t_cekani 50" << endl;
+		soubor << "=VYPOCTY= 1" << endl;
+		soubor << "prostor 50" << endl;
+		soubor << "=BUNKY= 2" << endl;
+		soubor << "kolonie 100" << endl;
+		soubor << "r_bunek 15" << endl;
+		soubor << "preskok 0" << endl;
+		soubor << "meze 50" << endl;
+		soubor << "rozl 20" << endl;
+		soubor << "poc_dot 4" << endl;
+		soubor << "snizovani 0.1" << endl;
+		soubor << "oprava 0.01" << endl;
+		soubor << "metabolismus_0 0.05" << endl;
+		soubor << "deska 0" << endl;
+		soubor << "supresory 0";
+
+		soubor.close();
+	}
+	// vytvoreni souboru logu, pokud neexistuje
+	ifstream logfile("log.txt");
+	if (!logfile.good())
+	{
+		char cas[30];
+
+		ofstream logfile("log.txt");
+		logfile << aktualni_cas(cas) << " - Vytvoreni logu" << endl;
+		logfile.close();
+	}
+
 
 	int state = 0;
 	double pom, pom2;
+	bool omezeni = 0;
 
 // GUI
 	system("cls"); // vymazani obsahu okna
@@ -143,7 +194,7 @@ int main(int argc, char* const argv[])
 				iteraci = 1000;
 			}
 			stringstream(argv[2]) >> pom;
-			if (pom >= 0 && pom <= 10)
+			if (pom >= 1 && pom <= 10)
 			{
 				meritko = pom;
 			}
@@ -152,20 +203,16 @@ int main(int argc, char* const argv[])
 				meritko = 1;
 			}
 			stringstream(argv[3]) >> pom;
-			stringstream(argv[4]) >> pom2;
-			if ((pom > 0) && (pom2 > 0))
-			{
-				omezeni = 1;
-				omezeni_x = pom;
-				omezeni_z = pom2;
-			}
 			if (pom > 0)
 			{
 				omezeni_x = pom;
+				omezeni = 1;
 			}
+			stringstream(argv[4]) >> pom2;
 			if (pom2 > 0)
 			{
 				omezeni_z = pom2;
+				omezeni = 1;
 			}
 			stringstream(argv[5]) >> pom;
 			if (pom == 1)
@@ -205,6 +252,10 @@ int main(int argc, char* const argv[])
 		}
 		cout << "----------------------------------------------\n";
 		
+		char cas[30];
+		ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
+		logfile << aktualni_cas(cas) << " - Zahajeni simulace (meritko " << meritko << "; " << iteraci << " iteraci; omezeni " << omezeni_x << "x" << omezeni_z << "; tumor " << tum << ")" << endl;
+		logfile.close();
 
 		// vypocet a zobrazeni
 		// zapnuti okna
@@ -241,6 +292,8 @@ int main(int argc, char* const argv[])
 		int mxx = 0, myy = 0;
 		int mxold = 0, myold = 0;
 		float mznew = 0, mzz = 0, mzold = 0;
+
+		auto cas_start = std::chrono::high_resolution_clock::now();
 
 		while (window.isOpen() && !odejit) {
 			sf::Event Event;
@@ -322,6 +375,15 @@ int main(int argc, char* const argv[])
 				cout << "\n\nKonec simulace." << endl; // ukonceni vypoctu
 											 //cout << "\nkonecny pocet bunek: " << size(bunky.x) << endl;
 				//cout << "pocet apoptoz: " << bunky.pocet_A << endl;
+
+				auto cas_konec = std::chrono::high_resolution_clock::now();
+				std::chrono::duration<float> cas_rozdil = cas_konec - cas_start;
+
+				char cas[30];
+				ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
+				logfile << aktualni_cas(cas) << " - Ukonceni simulace. Delka vypoctu: " << cas_rozdil.count() << " sekund" << endl;
+				logfile.close();
+
 				pocet_iteraci += 1;
 			}
 

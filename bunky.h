@@ -30,7 +30,7 @@ public:
 	vector<double> r;
 	vector<int> stav;
 	int pocet_A = 0;
-	double prostor;
+	double prostor = 100;
 
 	vector<bool> tumor;
 
@@ -75,6 +75,7 @@ private:
 	vector<double> rust;
 	vector<double> trvani_cyklu;
 	vector<double> prah_poskozeni;
+	vector<bool> navrat;
 
 	double prumer_x;
 	double prumer_y;
@@ -107,6 +108,9 @@ private:
 	int poc_dot = 4; // maximalni pocet dotyku pro vstup do G1
 
 	double snizovani = 0.9;
+	double metabolismus_0 = 0.05;
+	bool deska = 0;
+	bool supresory = 0;
 
 	int mark1, mark2, mark3, mark4;
 	
