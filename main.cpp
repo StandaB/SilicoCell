@@ -132,7 +132,7 @@ int main(int argc, char* const argv[])
 		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model> <tumor>" << endl;
 		cout << "Napr. bunky 2000 2 150 150 1 y" << endl;
 		cout << "pro napovedu: " << argv[0] << " -h" << endl;
-		cout << "pro standardni nastaveni: " << argv[0] << " -s (5 000 iteraci, meritko 2, omezeni 200x200 um, model plochy, s tumorem)" << endl;
+		cout << "pro standardni nastaveni: " << argv[0] << " -s (5 000 iteraci, meritko 2.5, omezeni 200x200 um, model plochy, s tumorem)" << endl;
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
@@ -301,12 +301,26 @@ int main(int argc, char* const argv[])
 				if (Event.type == sf::Event::Closed)
 				{
 					window.close();
-					//delete[] bunky.meta;
-					//delete[] bunky.zvny;
+
+					if (pocet_iteraci <= iteraci)
+					{
+						char cas[30];
+						ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
+						logfile << aktualni_cas(cas) << " - Program ukoncen pri iteraci " << pocet_iteraci << ", pocet bunek: " << size(bunky.x) << endl;
+						logfile.close();
+					}
 				}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				{
 					window.close();
+
+					if (pocet_iteraci <= iteraci)
+					{
+						char cas[30];
+						ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
+						logfile << aktualni_cas(cas) << " - Program ukoncen pri iteraci " << pocet_iteraci << ", pocet bunek: " << size(bunky.x) << endl;
+						logfile.close();
+					}
 				}
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
@@ -381,7 +395,7 @@ int main(int argc, char* const argv[])
 
 				char cas[30];
 				ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
-				logfile << aktualni_cas(cas) << " - Ukonceni simulace. Delka vypoctu: " << cas_rozdil.count() << " sekund" << endl;
+				logfile << aktualni_cas(cas) << " - Ukonceni simulace. Delka vypoctu: " << cas_rozdil.count() << " sekund, " << size(bunky.x) << " bunek" << endl;
 				logfile.close();
 
 				pocet_iteraci += 1;
