@@ -6,7 +6,13 @@
 #include <iostream>
 #include <vector>
 #include "vypocty.h"
-//#include <thread>
+#include <time.h>
+#include <SFML/Graphics.hpp>
+#include <SFML/OpenGL.hpp>
+#include <chrono>
+#include <fstream>
+#include <string>
+#include <future>
 
 using namespace std;
 
@@ -15,10 +21,10 @@ using namespace std;
 class bunky {
 
 public:
-	void bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber);
+	void bunky_cyklus(double nastaveni[]);
 	void inicializace(double meritko, bool tum);
 	void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
-	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
+	vector<double> pohyb(double meritko, int n);
 
 
 	int posun_x = 0;
@@ -105,12 +111,14 @@ private:
 	int kolik;
 
 	//double max_vzd = 100; // vzdalenost od stredu - pozice > max_vzd -> prechazi do G0 = omezeni oblasti vypoctu
-	int poc_dot = 4; // maximalni pocet dotyku pro vstup do G1
+	int poc_dot = 5; // maximalni pocet dotyku pro vstup do G1
+	int poc_dot2 = 8;
 
 	double snizovani = 0.9;
 	double metabolismus_0 = 0.05;
 	bool deska = 0;
 	bool supresory = 0;
+	double poskozeni_tum = 1;
 
 	int mark1, mark2, mark3, mark4;
 	

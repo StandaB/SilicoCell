@@ -9,7 +9,6 @@
 #include <string>
 #include <time.h>
 #include <chrono>
-//#include <thread>
 
 
 using namespace std;
@@ -102,15 +101,17 @@ int main(int argc, char* const argv[])
 		soubor << "meze 50" << endl;
 		soubor << "rozl 20" << endl;
 		soubor << "poc_dot 4" << endl;
+		soubor << "poc_dot2 8" << endl;
 		soubor << "snizovani 0.1" << endl;
 		soubor << "oprava 0.01" << endl;
-		soubor << "metabolismus_0 0.05" << endl;
+		soubor << "metabolismus_0 0.1" << endl;
 		soubor << "deska 0" << endl;
-		soubor << "supresory 0";
+		soubor << "supresory 0" << endl;
+		soubor << "poskozeni_tum 0.75";
 
 		soubor.close();
 	}
-	// vytvoreni souboru logu, pokud neexistuje
+	// vytvoreni souboru logu pokud neexistuje
 	ifstream logfile("log.txt");
 	if (!logfile.good())
 	{
@@ -157,7 +158,8 @@ int main(int argc, char* const argv[])
 
 		cout << "Ovladani:\n";
 		cout << "-Leve tlacitko mysi + pohyb mysi: otaceni zobrazeni\n";
-		cout << "-Prave tlacitko mysi + posuv mysi: zobrazeni rezu objektem.\n";
+		cout << "-Prave tlacitko mysi + posuv mysi: zobrazeni rezu objektem\n";
+		cout << "-Klavesa Ctrl: prepnuti zobrazeni kolonie / jen tumor\n";
 		cout << "-Klavesa Esc: ukonceni simulace\n\n\n";
 
 		cout << "Stanislav Belehradek, 2017\n";
@@ -292,6 +294,9 @@ int main(int argc, char* const argv[])
 		int mxx = 0, myy = 0;
 		int mxold = 0, myold = 0;
 		float mznew = 0, mzz = 0, mzold = 0;
+		bool zobrazeni = 0;
+
+		double nastaveni[] = { t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber, omezeni, omezeni_x, omezeni_z };
 
 		auto cas_start = std::chrono::high_resolution_clock::now();
 
@@ -320,6 +325,17 @@ int main(int argc, char* const argv[])
 						ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
 						logfile << aktualni_cas(cas) << " - Program ukoncen pri iteraci " << pocet_iteraci << ", pocet bunek: " << size(bunky.x) << endl;
 						logfile.close();
+					}
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+				{
+					if (zobrazeni)
+					{
+						zobrazeni = 0;
+					}
+					else
+					{
+						zobrazeni = 1;
 					}
 				}
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
@@ -366,20 +382,9 @@ int main(int argc, char* const argv[])
 			if (pocet_iteraci < iteraci)
 			{
 				
-				bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);
+				//bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);
 
-				//int od = 0;
-				//int po = size(bunky.x);
-				////t[0] = thread(&bunky::pohyb, meritko, omezeni, omezeni_x, omezeni_z, od, po);
-				//t[1] = thread(moveit, meritko, omezeni, omezeni_x, omezeni_z, od, po);
-				////t[2] = thread(moveit, meritko, omezeni, omezeni_x, omezeni_z, od, kolik);
-				////t[3] = thread(moveit, meritko, omezeni, omezeni_x, omezeni_z, od, kolik);
-				//t[0].join();
-				//t[1].join();
-				//t[2].join();
-				//t[3].join();
-
-				bunky.bunky_cyklus(t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber);
+				bunky.bunky_cyklus(nastaveni);
 
 				pocet_iteraci += 1;
 				cout << "\riterace: " << pocet_iteraci << " | pocet bunek: " << size(bunky.x);
@@ -387,8 +392,6 @@ int main(int argc, char* const argv[])
 			else if (pocet_iteraci == iteraci)
 			{
 				cout << "\n\nKonec simulace." << endl; // ukonceni vypoctu
-											 //cout << "\nkonecny pocet bunek: " << size(bunky.x) << endl;
-				//cout << "pocet apoptoz: " << bunky.pocet_A << endl;
 
 				auto cas_konec = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<float> cas_rozdil = cas_konec - cas_start;
@@ -448,12 +451,17 @@ int main(int argc, char* const argv[])
 					}
 				}
 
-				glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+				if (!(bunky.tumor[i] == 0 && zobrazeni == 1))
+				{
+					glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+				}
+				
 				glEnd();
 
 			}
 
 			window.display(); // zobrazeni
+			//sf::sleep(sf::milliseconds(1));
 		}
 	}
 
