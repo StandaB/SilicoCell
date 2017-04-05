@@ -13,6 +13,8 @@
 #include <fstream>
 #include <string>
 #include <future>
+#include <algorithm>
+#include <functional>
 
 using namespace std;
 

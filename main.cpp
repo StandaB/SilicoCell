@@ -47,6 +47,7 @@ int main(int argc, char* const argv[])
 	double omezeni_x = 200.0;
 	double omezeni_z = 200.0;
 	int vyber = 1;
+	bool ukladani = 0;
 
 	// // casy // //
 	double meritko = 1.0;
@@ -80,6 +81,7 @@ int main(int argc, char* const argv[])
 		t_M = param[zf + 3];
 		t_Apop = param[zf + 4];
 		t_cekani = param[zf + 5];
+		ukladani = param[zf + 6];
 	}
 	else
 	{
@@ -92,6 +94,7 @@ int main(int argc, char* const argv[])
 		soubor << "t_M 60" << endl;
 		soubor << "t_Apop 180" << endl;
 		soubor << "t_cekani 50" << endl;
+		soubor << "ukladani 0" << endl;
 		soubor << "=VYPOCTY= 1" << endl;
 		soubor << "prostor 50" << endl;
 		soubor << "=BUNKY= 2" << endl;
@@ -461,7 +464,19 @@ int main(int argc, char* const argv[])
 			}
 
 			window.display(); // zobrazeni
-			//sf::sleep(sf::milliseconds(1));
+
+			if ((ukladani == 1) && (pocet_iteraci % 50) == 1)
+			{
+				sf::Image obr;
+				std:string nazev, pom;
+				pom = to_string(pocet_iteraci);
+
+				nazev = "obr/iter_" + pom + ".png";
+				obr = window.capture();
+				obr.saveToFile(nazev);
+				//sf::sleep(sf::milliseconds(10));
+			}
+			
 		}
 	}
 

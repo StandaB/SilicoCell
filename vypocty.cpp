@@ -9,7 +9,7 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor
 {
 	if (vyber == 1)
 	{
-		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor));
+		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)) - 0); // -0.xx kdyz u zdroje neni 100% zivin
 	}
 	else if (vyber == 2)
 	{
@@ -30,7 +30,7 @@ double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor
 {
 	if (vyber == 1)
 	{
-		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor));
+		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)) - 0);
 	}
 	else if (vyber == 2)
 	{
@@ -64,7 +64,7 @@ double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor
 	//	vysledek = 0;
 	//}
 
-	vysledek = 0;
+	vysledek = 0; // bez toxinu
 
 	return(vysledek);
 }
@@ -73,7 +73,7 @@ double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor)
 {
 	if (vyber == 1)
 	{
-		vysledek = pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor));
+		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)) - 0);
 	}
 	else if (vyber == 2)
 	{

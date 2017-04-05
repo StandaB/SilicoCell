@@ -20,7 +20,7 @@ void bunky::inicializace(double meritko, bool tum)
 		soubor.close();
 
 		// zapis parametru do promennych
-		int zf = 8; // zacatek nastaveni VYPOCTY
+		int zf = 9; // zacatek nastaveni VYPOCTY
 		prostor = param[zf]; // vstup do vypoctu prostorovych koncentraci
 		kolonie = param[zf + 2];
 		r_bunek = param[zf + 3];
@@ -132,6 +132,21 @@ void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, floa
 	glTranslatef(-(screen_width / 2) - prumer_x, -(screen_height / 2) - prumer_y, 0);
 }
 
+template <class Type> class nasobeni_vec
+{
+private:
+
+	Type kolikrat;
+
+public:
+
+	nasobeni_vec(const Type &_Val) : kolikrat(_Val) { }
+	int operator()(Type &vec) const
+	{
+		return (vec * kolikrat);
+	}
+
+};
 
 void bunky::bunky_cyklus(double nastaveni[])
 {
@@ -216,7 +231,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 		double HIF1 = 0, PHD = 0, PDH = 0;
 
 		PHD = (1 - mtb) * (kyslik);
-		HIF1 = (round((Akt + metabolismus[n])) / 2.0) * (1 - PHD);
+		HIF1 = ((Akt + metabolismus[n]) / 2.0) * (1 - PHD);
 		PDH = 1 - HIF1;
 
 		metabolismus[n] = (kolik_RF + kolik_zivin) * prechod_G1 * PDH * metabolismus_0;
@@ -244,7 +259,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 		rust[n] = (poz_r[n] * pow(2.0, (1.0 / 3.0)) - poz_r[n]) / delka_cyklu[n]; // krok rustu (ziviny + rustovy faktor)
 
 
-		// // bunecny cyklus // //
+// // bunecny cyklus // //
 		stav_bb = stav[n];
 		switch (stav_bb) {
 
@@ -286,8 +301,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 			doba_zivota[n] += 1;
 
 
-			// regulace velikosti (podle zivin a RF)
-						//poz_r[n]; // pozadovana velikost bunky (15 pro kuzi)
+// regulace velikosti (podle zivin a RF), pozadovana velikost bunky (15 pro kuzi)
 
 
 			// regulace poctu (utlacovane jsou ve stresu -> vyssi pst apoptozy)
@@ -530,25 +544,23 @@ void bunky::bunky_cyklus(double nastaveni[])
 			break;
 		}
 
-		// // mutace ?
+// // mutace ?
 
 
-		poskozeni[n] = poskozeni[n] * (1 - (oprava * meritko)); // opravne mechanismy bunky
+		double kolikrat = (1 - (oprava * meritko));
+		std::transform(poskozeni.begin(), poskozeni.end(), poskozeni.begin(), nasobeni_vec<double>(kolikrat)); // opravne mechanismy bunky
 
 	}
+
 
 	//snizovani koncentrace metabolitu (lymf. system atd.)
-#pragma loop(hint_parallel(4)) 
-	for (size_t i = 0; i < (meze*meze*meze); i++)
-	{
-		meta[i] = meta[i] * (1 - (snizovani * meritko));
-		zvny[i] = zvny[i] * (1 - (snizovani * meritko));
-	}
+	double kolikrat = (1 - (snizovani * meritko));
+	std::transform(meta.begin(), meta.end(), meta.begin(), nasobeni_vec<double>(kolikrat));
+	std::transform(zvny.begin(), zvny.end(), zvny.begin(), nasobeni_vec<double>(kolikrat));
 
 
+	// pohyb
 	vector<double> vystup;
-
-	// pohyb	
 	for (size_t ko = 0; ko < size(x); ko++)
 	{
 		vystup = pohyb(meritko, ko);
@@ -608,147 +620,104 @@ vector<double> bunky::pohyb(double meritko, int n)
 {
 
 	kolik = size(x);
-//#pragma loop(hint_parallel(2)) 
-//	for (size_t n = 0; n < kolik; n++)
-//	{
-		touch = 0;
-		prekryv = 0.0;
-		okoli = 0.0;
-		okoli2 = 0.0;
-		en_x = 0.0; en_y = 0.0; en_z = 0.0;
-		en_x2 = 0.0; en_y2 = 0.0; en_z2 = 0.0;
-		vzd_xx = 0; vzd_yy = 0; vzd_zz = 0;
-		en1 = 0; en2 = 0;
-		vector<double> vzd(kolik);
+
+	touch = 0;
+	prekryv = 0.0;
+	okoli = 0.0;
+	okoli2 = 0.0;
+	en_x = 0.0; en_y = 0.0; en_z = 0.0;
+	en_x2 = 0.0; en_y2 = 0.0; en_z2 = 0.0;
+	vzd_xx = 0; vzd_yy = 0; vzd_zz = 0;
+	en1 = 0; en2 = 0;
+	vector<double> vzd(kolik);
 
 #pragma loop(hint_parallel(4))
-		for (size_t i = 0; i < kolik; i++) // vytvoreni vektoru vzdalenosti vsech bunek od n
+	for (size_t i = 0; i < kolik; i++) // vytvoreni vektoru vzdalenosti vsech bunek od n
+	{
+		vzd_xx = (x[n] - x[i]);
+		vzd_yy = (y[n] - y[i]);
+		vzd_zz = (z[n] - z[i]);
+		vzdalenost = sqrt(pow(vzd_xx, 2.0) + pow(vzd_yy, 2.0) + pow(vzd_zz, 2.0)) - (r[n] + r[i]);
+		vzd[i] = vzdalenost;
+
+		if ((i != n))
 		{
-			vzd_xx = (x[n] - x[i]);
-			vzd_yy = (y[n] - y[i]);
-			vzd_zz = (z[n] - z[i]);
-			vzdalenost = sqrt(pow(vzd_xx, 2.0) + pow(vzd_yy, 2.0) + pow(vzd_zz, 2.0)) - (r[n] + r[i]);
-			vzd[i] = vzdalenost;
-
-			if ((i != n))
+			if (vzdalenost <= 0.0) // dotyky a prekryti
 			{
-				if (vzdalenost <= 0.0) // dotyky a prekryti
-				{
-					touch += 1;
-					okoli += 1.0;
-					prekryv = prekryv + abs(vzdalenost);
+				touch += 1;
+				okoli += 1.0;
+				prekryv = prekryv + abs(vzdalenost);
 
-					// vypocet energie posunu - deleni bunek (prekryti)
-					//energie = meritko * (exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1 / (5 * 2500)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100;
-					//energie = meritko * -vzdalenost/100;
-					energie = meritko * pow(vzdalenost, 2.0) / 1000;
-					if (energie > 0.5)
-					{
-						energie = 0.5;
-					}
-					en_x = en_x + (vzd_xx * energie);
-					en_y = en_y + (vzd_yy * energie);
-					en_z = en_z + (vzd_zz * energie);
-				}
-				else if (vzdalenost <= 20.0) // pohyb k blizkemu okoli
+				// vypocet energie posunu - deleni bunek (prekryti)
+				//energie = meritko * (exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1 / (5 * 2500)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100;
+				//energie = meritko * -vzdalenost/100;
+				energie = meritko * pow(vzdalenost, 2.0) / 1000;
+				if (energie > 0.5)
 				{
-					okoli2 += 1.0;
-
-					energie = -meritko * (12.57 * vzdalenost * vzdalenost) * pow(0.0053, (3.0 / 2.0)) * exp(-0.0167 * vzdalenost * vzdalenost) / 100; // funkce Maxwell-Boltzmann (simulace adheze)
-					//energie = meritko * -(0.001 / exp(vzdalenost/10)); // vypocet energie posunu
-					if (energie > 0.5)
-					{
-						energie = 0.5;
-					}
-					en_x2 = en_x2 + (vzd_xx * energie);
-					en_y2 = en_y2 + (vzd_yy * energie);
-					en_z2 = en_z2 + (vzd_zz * energie);
+					energie = 0.5;
 				}
+				en_x = en_x + (vzd_xx * energie);
+				en_y = en_y + (vzd_yy * energie);
+				en_z = en_z + (vzd_zz * energie);
+			}
+			else if (vzdalenost <= 20.0) // pohyb k blizkemu okoli
+			{
+				okoli2 += 1.0;
+
+				energie = -meritko * (12.57 * vzdalenost * vzdalenost) * pow(0.0053, (3.0 / 2.0)) * exp(-0.0167 * vzdalenost * vzdalenost) / 100; // funkce Maxwell-Boltzmann (simulace adheze)
+				//energie = meritko * -(0.001 / exp(vzdalenost/10)); // vypocet energie posunu
+				if (energie > 0.5)
+				{
+					energie = 0.5;
+				}
+				en_x2 = en_x2 + (vzd_xx * energie);
+				en_y2 = en_y2 + (vzd_yy * energie);
+				en_z2 = en_z2 + (vzd_zz * energie);
 			}
 		}
+	}
 
+	en1 = abs(sqrt(pow(en_x, 2.0) + pow(en_y, 2.0) + pow(en_z, 2.0)));
+	en2 = abs(sqrt(pow(en_x2, 2.0) + pow(en_y2, 2.0) + pow(en_z2, 2.0)));
 
-		//vzd[n] = 100000; // vynechani pozice n (== stejna bunka)
-		//auto minimum = min_element(vzd.begin(), vzd.end()); // (bez nejblizsiho - pro delici se bunky)
-		//prekryti[n] = prekryv - abs(*minimum);
-		//prekryti[n] = prekryv;
-		//dotyku[n] = touch;
-
-		en1 = abs(sqrt(pow(en_x, 2.0) + pow(en_y, 2.0) + pow(en_z, 2.0)));
-		en2 = abs(sqrt(pow(en_x2, 2.0) + pow(en_y2, 2.0) + pow(en_z2, 2.0)));
-
-		// vypocet posuvu
-		//int kde_x = round(x[n] / rozl);
-		//int kde_y = round(y[n] / rozl);
-		//int kde_z = round(z[n] / rozl);
-		//
-		//int f = kde_x + (kde_y + meze - 1) + (kde_z + ((meze - 1) * (meze - 1))); // pro pocet oblasti ECM 200*200*200. 1 oblast = 20*20*20 um nebo podle rozl
-		//
-		//if (en1 >= en2) // prioritu ma rozdeleni bunek pred priblizenim
-		//{
-		//	do_x = x[n] + ((en_x / okoli) * ECM_x[f]); // ECM ovlivnuje jak snadno se v danem smeru bunka pohybuje
-		//	do_y = y[n] + ((en_y / okoli) * ECM_y[f]);
-		//	do_z = z[n] + ((en_z / okoli) * ECM_z[f]);
-		//}
-		//else
-		//{
-		//	do_x = x[n] + ((en_x / okoli2) * ECM_x[f]);
-		//	do_y = y[n] + ((en_y / okoli2) * ECM_y[f]);
-		//	do_z = z[n] + ((en_z / okoli2) * ECM_z[f]);
-		//}
-
-		if ((en1 + (prekryv / 10)) >= en2) // prioritu ma rozdeleni bunek pred priblizenim, cim vic prekryti tim spis se bunky posunou od sebe
-		{
-			do_x = x[n] + ((en_x / okoli)); // ECM ovlivnuje jak snadno se v danem smeru bunka pohybuje
-			do_y = y[n] + ((en_y / okoli));
-			do_z = z[n] + ((en_z / okoli));
-		}
-		else
-		{
-			do_x = x[n] + ((en_x2 / okoli2));
-			do_y = y[n] + ((en_y2 / okoli2));
-			do_z = z[n] + ((en_z2 / okoli2));
-		}
-
-
-		//// omezeni rustu za hranici
-		//if (omezeni == 1)
-		//{
-		//	//if ((abs(do_x) > 100.0) && (stav[n] == 1))
-		//	if (abs(do_x - posun_x) > omezeni_x)
-		//	{
-		//		do_x = x[n];
-		//		dotyku[n] += 1;
-		//		//stav[n] = 0;
-		//	}
-		//	if (deska == 1)
-		//	{
-		//		if (((do_y - posun_y) > 0.0))
-		//		{
-		//			do_y = y[n];
-		//			dotyku[n] += 1;
-		//		}
-		//	}
-		//	if ((abs(do_z) > omezeni_z))
-		//	{
-		//		do_z = z[n];
-		//		dotyku[n] += 1;
-		//		//stav[n] = 0;
-		//	}
-		//}
-
-		//// posun bunek
-		//x[n] = (do_x);
-		//y[n] = (do_y);
-		//z[n] = (do_z);
-		//
+	// vypocet posuvu
+	//int kde_x = round(x[n] / rozl);
+	//int kde_y = round(y[n] / rozl);
+	//int kde_z = round(z[n] / rozl);
+	//
+	//int f = kde_x + (kde_y + meze - 1) + (kde_z + ((meze - 1) * (meze - 1))); // pro pocet oblasti ECM 200*200*200. 1 oblast = 20*20*20 um nebo podle rozl
+	//
+	//if (en1 >= en2) // prioritu ma rozdeleni bunek pred priblizenim
+	//{
+	//	do_x = x[n] + ((en_x / okoli) * ECM_x[f]); // ECM ovlivnuje jak snadno se v danem smeru bunka pohybuje
+	//	do_y = y[n] + ((en_y / okoli) * ECM_y[f]);
+	//	do_z = z[n] + ((en_z / okoli) * ECM_z[f]);
+	//}
+	//else
+	//{
+	//	do_x = x[n] + ((en_x / okoli2) * ECM_x[f]);
+	//	do_y = y[n] + ((en_y / okoli2) * ECM_y[f]);
+	//	do_z = z[n] + ((en_z / okoli2) * ECM_z[f]);
 	//}
 
-		vector<double> vystup;
-		vystup.push_back(do_x);
-		vystup.push_back(do_y);
-		vystup.push_back(do_z);
-		vystup.push_back(prekryv);
-		vystup.push_back(touch);
-		return vystup;
+	if ((en1 + (prekryv / 10)) >= en2) // prioritu ma rozdeleni bunek pred priblizenim, cim vic prekryti tim spis se bunky posunou od sebe
+	{
+		do_x = x[n] + ((en_x / okoli)); // ECM ovlivnuje jak snadno se v danem smeru bunka pohybuje
+		do_y = y[n] + ((en_y / okoli));
+		do_z = z[n] + ((en_z / okoli));
+	}
+	else
+	{
+		do_x = x[n] + ((en_x2 / okoli2));
+		do_y = y[n] + ((en_y2 / okoli2));
+		do_z = z[n] + ((en_z2 / okoli2));
+	}
+
+	vector<double> vystup;
+	vystup.push_back(do_x);
+	vystup.push_back(do_y);
+	vystup.push_back(do_z);
+	vystup.push_back(prekryv);
+	vystup.push_back(touch);
+	return vystup;
 }
