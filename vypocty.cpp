@@ -22,6 +22,14 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor
 		vysledek = 1;
 	}
 	
+	if (vysledek < 0)
+	{
+		vysledek = 0;
+	}
+	else if (vysledek > 1)
+	{
+		vysledek = 1;
+	}
 
 	return(vysledek);
 }
@@ -43,6 +51,14 @@ double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor
 		vysledek = 1;
 	}
 
+	if (vysledek < 0)
+	{
+		vysledek = 0;
+	}
+	else if (vysledek > 1)
+	{
+		vysledek = 1;
+	}
 
 	return(vysledek);
 }
@@ -63,6 +79,15 @@ double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor
 	//{
 	//	vysledek = 0;
 	//}
+	//
+	//if (vysledek < 0)
+	//{
+	//	vysledek = 0;
+	//}
+	//else if (vysledek > 1)
+	//{
+	//	vysledek = 1;
+	//}
 
 	vysledek = 0; // bez toxinu
 
@@ -82,6 +107,15 @@ double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor)
 		vysledek = exp(-(sqrt(pow(param_x, 2.0) + pow(param_y, 2.0)) / prostor));
 	}
 	else if (vyber == 0)
+	{
+		vysledek = 1;
+	}
+
+	if (vysledek < 0)
+	{
+		vysledek = 0;
+	}
+	else if (vysledek > 1)
 	{
 		vysledek = 1;
 	}
