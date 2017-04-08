@@ -6,6 +6,16 @@
 #include <iostream>
 #include <vector>
 #include "vypocty.h"
+#include <time.h>
+#include <SFML/Graphics.hpp>
+#include <SFML/OpenGL.hpp>
+#include <chrono>
+#include <fstream>
+#include <string>
+#include <future>
+#include <algorithm>
+#include <functional>
+#include <numeric>
 
 using namespace std;
 
@@ -14,10 +24,12 @@ using namespace std;
 class bunky {
 
 public:
-	void bunky_cyklus(double t_G1, double t_S, double t_G2, double t_M, double t_Apop, double t_cekani, double meritko, int vyber, bool omezeni, double omezeni_x, double omezeni_z);
+	void bunky_cyklus(double nastaveni[]);
 	void inicializace(double meritko, bool tum);
-	void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
-	void pohyb(double meritko, bool omezeni, double omezeni_x, double omezeni_z);
+	void transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
+	vector<double> pohyb(double meritko, int n);
+	void ulozit();
+	void nacist();
 
 
 	int posun_x = 0;
@@ -31,7 +43,7 @@ public:
 	int pocet_A = 0;
 	double prostor = 100;
 
-	vector<bool> tumor;
+	vector<int> tumor;
 
 	//double* ECM_x = new double[200*200*200]; // velikost ECM pole
 	//double* ECM_y = new double[200*200*200];
@@ -47,6 +59,9 @@ public:
 	vector<double> prah_deleni;
 	vector<double> delka_cyklu;
 	vector<double> metabolismus;
+
+	vector<int> poctyB1;
+	vector<int> poctyB2;
 	
 private:
 	vypocty vypocty;
