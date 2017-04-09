@@ -127,6 +127,7 @@ private:
 	bool deska = 0;
 	bool supresory = 0;
 	double poskozeni_tum = 1;
+	double vaha = 1;
 
 	int mark1, mark2, mark3, mark4;
 	

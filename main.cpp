@@ -90,24 +90,24 @@ int main(int argc, char* const argv[])
 		ofstream soubor("config.ini"); // vytvoreni konfigu kdyz neexistuje
 
 		soubor << "=MAIN= 0" << endl;
-		soubor << "t_G1 660" << endl;
-		soubor << "t_S 480" << endl;
-		soubor << "t_G2 240" << endl;
-		soubor << "t_M 60" << endl;
+		soubor << "t_G1 540" << endl;
+		soubor << "t_S 600" << endl;
+		soubor << "t_G2 270" << endl;
+		soubor << "t_M 30" << endl;
 		soubor << "t_Apop 180" << endl;
 		soubor << "t_cekani 50" << endl;
 		soubor << "ukladani 0" << endl;
 		soubor << "=VYPOCTY= 1" << endl;
-		soubor << "prostor 50" << endl;
+		soubor << "prostor 80" << endl;
 		soubor << "=BUNKY= 2" << endl;
 		soubor << "kolonie 100" << endl;
 		soubor << "r_bunek 15" << endl;
 		soubor << "preskok 0" << endl;
-		soubor << "meze 50" << endl;
+		soubor << "meze 100" << endl;
 		soubor << "rozl 20" << endl;
-		soubor << "poc_dot 8" << endl;
+		soubor << "poc_dot 6" << endl;
 		soubor << "poc_dot2 10" << endl;
-		soubor << "snizovani 0.1" << endl;
+		soubor << "snizovani 0.8" << endl;
 		soubor << "oprava 0.005" << endl;
 		soubor << "metabolismus_0 0.075" << endl;
 		soubor << "deska 0" << endl;
@@ -292,7 +292,7 @@ int main(int argc, char* const argv[])
 		glClearColor(1.f, 1.f, 1.f, 0.f);
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		glDepthMask(GL_TRUE);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
