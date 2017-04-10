@@ -98,21 +98,21 @@ int main(int argc, char* const argv[])
 		soubor << "t_cekani 50" << endl;
 		soubor << "ukladani 0" << endl;
 		soubor << "=VYPOCTY= 1" << endl;
-		soubor << "prostor 80" << endl;
+		soubor << "prostor 60" << endl;
 		soubor << "=BUNKY= 2" << endl;
 		soubor << "kolonie 100" << endl;
-		soubor << "r_bunek 15" << endl;
-		soubor << "preskok 0" << endl;
-		soubor << "meze 100" << endl;
-		soubor << "rozl 20" << endl;
-		soubor << "poc_dot 6" << endl;
-		soubor << "poc_dot2 10" << endl;
+		soubor << "r_bunek 10" << endl;
+		soubor << "t_tumor 0.95" << endl;
+		soubor << "meze 0" << endl;
+		soubor << "rozl 0" << endl;
+		soubor << "poc_dot 7" << endl;
+		soubor << "poc_dot2 0" << endl;
 		soubor << "snizovani 0.8" << endl;
 		soubor << "oprava 0.005" << endl;
-		soubor << "metabolismus_0 0.075" << endl;
+		soubor << "metabolismus_0 0" << endl;
 		soubor << "deska 0" << endl;
 		soubor << "supresory 0" << endl;
-		soubor << "poskozeni_tum 0.75";
+		soubor << "poskozeni_tum 0.5";
 
 		soubor.close();
 	}
@@ -137,14 +137,15 @@ int main(int argc, char* const argv[])
 
 	int state = 0;
 	double pom;
+	bool nacteni = 0;
 
 // GUI
 	system("cls"); // vymazani obsahu okna
 	if ((argc != 2) && (argc != 6)) { // chybne zadani
-		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model> <tumor>" << endl;
+		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni r> <prostorovy model> <tumor>" << endl;
 		cout << "pro napovedu: " << argv[0] << " -h" << endl;
-		cout << "Dostupne programy:	-s (standardni model s tumorem)";
-		//cout << "pro standardni nastaveni: " << argv[0] << " -s (5 000 iteraci, meritko 2.5, omezeni 200 um, model plochy, s tumorem)" << endl;
+		cout << "Dostupne programy:	-s (standardni model s tumorem)" << endl;
+		cout << "			-n (nacteni existujiciho modelu)";
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
@@ -181,10 +182,19 @@ int main(int argc, char* const argv[])
 	else if ((strcmp(argv[1], "s") == 0) || strcmp(argv[1], "-s") == 0) { // standardni nastaveni
 		iteraci = 5000;
 		meritko = 2.5;
-		omezeni_r = 200;
+		omezeni_r = 150;
 		vyber = 1;
 		tum = 1;
 		pokracovat = 1;
+	}
+	else if ((strcmp(argv[1], "n") == 0) || strcmp(argv[1], "-n") == 0) { // standardni nastaveni
+		iteraci = 1;
+		meritko = 1;
+		omezeni_r = 0;
+		vyber = 0;
+		tum = 0;
+		pokracovat = 1;
+		nacteni = 1;
 	}
 	else if ((strcmp(argv[1], "p1") == 0) || strcmp(argv[1], "-p1") == 0) // predvolba 1
 	{
@@ -214,7 +224,7 @@ int main(int argc, char* const argv[])
 				iteraci = 1000;
 			}
 			stringstream(argv[2]) >> pom;
-			if (pom >= 1 && pom <= 10)
+			if (pom >= 1 && pom <= 5)
 			{
 				meritko = pom;
 			}
@@ -415,7 +425,11 @@ int main(int argc, char* const argv[])
 			if (pocet_iteraci < iteraci)
 			{
 				
-				//bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);
+				if (nacteni == 1)
+				{
+					bunky.nacist();
+					nacteni = 0;
+				}
 
 				bunky.bunky_cyklus(nastaveni);
 

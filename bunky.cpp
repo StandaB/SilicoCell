@@ -24,7 +24,7 @@ void bunky::inicializace(double meritko, bool tum)
 		prostor = param[zf]; // vstup do vypoctu prostorovych koncentraci
 		kolonie = param[zf + 2];
 		r_bunek = param[zf + 3];
-		preskok = param[zf + 4];
+		t_tumor = param[zf + 4];
 		meze = param[zf + 5];
 		rozl = param[zf + 6];
 		poc_dot = param[zf + 7];
@@ -67,30 +67,30 @@ void bunky::inicializace(double meritko, bool tum)
 	}
 
 	// generovani ECM
-	for (size_t i = 0; i < (meze*meze*meze); i++)
-	{
-		//double c1 = (rand() % 1001) / 1000.0;
-		//double c2 = (rand() % 1001) / 1000.0;
-		//double c3 = (rand() % 1001) / 1000.0;
-		//double soucet_c = c1 + c2 + c3;
-		//ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um nebo rozl)
-		//ECM_y[i] = c2 / soucet_c;
-		//ECM_z[i] = c3 / soucet_c;
+	//for (size_t i = 0; i < (meze*meze*meze); i++)
+	//{
+	//	//double c1 = (rand() % 1001) / 1000.0;
+	//	//double c2 = (rand() % 1001) / 1000.0;
+	//	//double c3 = (rand() % 1001) / 1000.0;
+	//	//double soucet_c = c1 + c2 + c3;
+	//	//ECM_x[i] = c1 / soucet_c; // normalizovany nahodny smer v oblastech (1x1x1 = 20x20x20 um nebo rozl)
+	//	//ECM_y[i] = c2 / soucet_c;
+	//	//ECM_z[i] = c3 / soucet_c;
 
-		//// stejny smer
-		//ECM_x[i] = 0.8;
-		//ECM_y[i] = 0.1;
-		//ECM_z[i] = 0.1;
+	//	//// stejny smer
+	//	//ECM_x[i] = 0.8;
+	//	//ECM_y[i] = 0.1;
+	//	//ECM_z[i] = 0.1;
 
-		//// bez ucinku
-		//ECM_x[i] = 1;
-		//ECM_y[i] = 1;
-		//ECM_z[i] = 1;
+	//	//// bez ucinku
+	//	//ECM_x[i] = 1;
+	//	//ECM_y[i] = 1;
+	//	//ECM_z[i] = 1;
 
 
-		// koncentrace v oblastech (1x1x1 meta = 20x20x20 um nebo podle rozl)
-		//zvny.push_back(0); // ziviny v prostoru
-	}
+	//	// koncentrace v oblastech (1x1x1 meta = 20x20x20 um nebo podle rozl)
+	//	//zvny.push_back(0); // ziviny v prostoru
+	//}
 
 	if (tum == 1)
 	{
@@ -240,11 +240,14 @@ void bunky::bunky_cyklus(double nastaveni[])
 		// regulace poctu (utlacovane a poskozene jsou ve stresu -> vyssi pst apoptozy)
 		if (doba_zivota[n] > (200.0 / meritko)) // nove rozdelene bunky maji cas se od sebe odsunout
 		{
-			poskozeni[n] = poskozeni[n] + ((kolik_toxinu + (metabolismus[n] / 10.0) + prekryti[n]) / 100.0); // vysoke prekryti bunek (utlacovani) a toxiny v okoli zpusobuji poskozeni
+			poskozeni[n] = poskozeni[n] + ((kolik_toxinu + meta[n] + prekryti[n] / 20.0) / 30.0); // vysoke prekryti bunek (utlacovani) a toxiny v okoli zpusobuji poskozeni
 		}
 
 		// regulace velikosti
-		poz_r[n] = (r_bunek - (tumor[n] * preskok) - (prekryti[n] / 10.0));
+		double TOR = ((10 + (Akt * (kolik_RF + kolik_zivin + kyslik) / 3.0)) / 10.0) - 0.05; // hodnoty 0.95 - 1.05 (5 % rozsah polomeru)
+		//poz_r[n] = (r_bunek - (tumor[n] * preskok) - (prekryti[n] / 20.0)) * TOR;
+		poz_r[n] = (r_bunek - (prekryti[n] / 20.0)) * TOR;
+
 		if (poz_r[n] < (r_bunek / 2.0))
 		{
 			poz_r[n] = r_bunek / 2.0;
@@ -410,7 +413,15 @@ void bunky::bunky_cyklus(double nastaveni[])
 				//}
 			}
 
-			if ((trvani_cyklu[n] > (t_G1 / meritko)) && (stav[n] == 1))
+			zrychleni = 1;
+			if (tumor[n] == 1)
+			{
+				zrychleni = t_tumor; // nastavitelne zrychleni rustu tumoru
+			}
+
+			vaha = (1.0 - ((metabolismus[n] - 0.8))) * zrychleni; // pomalejsi metabolismus -> delsi cyklus
+
+			if ((trvani_cyklu[n] > (t_G1 * vaha / meritko)) && (stav[n] == 1))
 			{
 				mark1 = 1;
 				if (!prechod_G1)
@@ -442,12 +453,12 @@ void bunky::bunky_cyklus(double nastaveni[])
 				}
 			}
 
-			// tumor preskakuje G1
-			if (((preskok + tumor[n]) == 2) && (stav[n] == 1))
-			{
-				stav[n] = 2; // vstup do bunecneho cyklu
-				trvani_cyklu[n] = 0;
-			}
+			//// tumor preskakuje G1
+			//if (((preskok + tumor[n]) == 2) && (stav[n] == 1))
+			//{
+			//	stav[n] = 2; // vstup do bunecneho cyklu
+			//	trvani_cyklu[n] = 0;
+			//}
 
 			break;
 
@@ -455,7 +466,13 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 			doba_zivota[n] += 1; // doba ve fazi
 
-			vaha = 1.0 - ((metabolismus[n] - 0.8));
+			zrychleni = 1;
+			if (tumor[n] == 1)
+			{
+				zrychleni = t_tumor; // nastavitelne zrychleni rustu tumoru
+			}
+
+			vaha = (1.0 - ((metabolismus[n] - 0.8))) * zrychleni; // pomalejsi metabolismus -> delsi cyklus
 			if (vaha > 1.5)
 			{
 				vaha = 1.5;
@@ -466,7 +483,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 			}
 
 			delka_cyklu[n] = t_S + t_G2 + t_M; // delka cyklu
-			delka_cyklu[n] = (delka_cyklu[n] * vaha) / meritko; // pomalejsi metabolismus -> delsi cyklus
+			delka_cyklu[n] = delka_cyklu[n] * vaha / meritko; // vahovani
 			rust[n] = (poz_r[n] * pow(2.0, (1.0 / 3.0)) - poz_r[n]) / delka_cyklu[n]; // krok rustu
 
 			if (trvani_cyklu[n] < delka_cyklu[n])
@@ -682,7 +699,7 @@ vector<double> bunky::pohyb(double meritko, int n)
 				// vypocet energie posunu - deleni bunek (prekryti)
 				//energie = meritko * (exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1 / (5 * 2500)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100;
 				//energie = meritko * -vzdalenost/100;
-				energie = meritko * pow(vzdalenost, 2.0) / 1000;
+				energie = meritko * pow(vzdalenost, 2.0) / 500;
 
 				if (energie > 0.5)
 				{
@@ -699,7 +716,7 @@ vector<double> bunky::pohyb(double meritko, int n)
 				//energie = -meritko * (12.57 * vzdalenost * vzdalenost) * pow(0.0053, (3.0 / 2.0)) * exp(-0.0167 * vzdalenost * vzdalenost) / 100.0; // funkce Maxwell-Boltzmann (simulace adheze)
 				//energie = meritko * -(0.001 / exp(vzdalenost/10)); // vypocet energie posunu
 				//energie = meritko * abs((exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1.0 / (5.0 * 2500.0)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100.0); // komplexni cisla!!
-				energie = meritko * (-1.0 / exp(vzdalenost / 10.0)) / 200.0;
+				energie = meritko * (-1.0 / exp(vzdalenost / 10.0)) / 500.0;
 
 				if (energie > 0.5)
 				{

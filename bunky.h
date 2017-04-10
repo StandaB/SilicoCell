@@ -71,11 +71,11 @@ private:
 	double kolik_RF;
 	double kolik_toxinu;
 
-	bool preskok = 0;
+	double t_tumor = 1.0;
 
 	// parametry kolonie
 	int kolonie = 100;
-	double r_bunek = 15;
+	double r_bunek = 15.0;
 	vector<double> poz_r;
 	int stav_bb;
 	vector<int> doba_zivota;
@@ -128,6 +128,7 @@ private:
 	bool supresory = 0;
 	double poskozeni_tum = 1;
 	double vaha = 1;
+	double zrychleni = 1;
 
 	int mark1, mark2, mark3, mark4;
 	
