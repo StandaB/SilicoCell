@@ -2,7 +2,7 @@
 #include "bunky.h"
 
 
-void bunky::inicializace(double meritko, bool tum)
+void bunky::inicializace(double meritko)
 {
 	srand(time(0)); // inicializace generatoru nahodnych cisel
 
@@ -91,22 +91,27 @@ void bunky::inicializace(double meritko, bool tum)
 	//	// koncentrace v oblastech (1x1x1 meta = 20x20x20 um nebo podle rozl)
 	//	//zvny.push_back(0); // ziviny v prostoru
 	//}
+}
 
-	if (tum == 1)
+void bunky::ini2()
+{
+	int mini = (sqrt(pow(x[0] - posun_x, 2.0) + pow(y[0] - posun_y, 2.0) + pow(z[0], 2.0)));
+	int kde = 0;
+	for (size_t i = 0; i < size(x); i++)
 	{
-		// vytvoreni bunky tumoru
-		x[1] = posun_x; // uprostred kolonie
-		y[1] = posun_y;
-		z[1] = 0;
-		tumor[1] = 1;
-		prah_apop[1] = -1;
-		rust[1] = (r[1] * pow(2.0, (1.0 / 3.0)) - r[1]) * meritko / delka_cyklu[1];
-		if (supresory)
+		if ((sqrt(pow(x[i] - posun_x, 2.0) + pow(y[i] - posun_y, 2.0) + pow(z[i], 2.0))) <= mini)
 		{
-			prah_poskozeni[1] = poskozeni_tum; // rozsah <0,1>, 2 = poskozeni nema vliv
+			kde = i;
+			mini = (sqrt(pow(x[i] - posun_x, 2.0) + pow(y[i] - posun_y, 2.0) + pow(z[i], 2.0)));
 		}
 	}
-
+	// vytvoreni bunky tumoru
+	tumor[kde] = 1;
+	prah_apop[kde] = -1;
+	if (!supresory)
+	{
+		prah_poskozeni[kde] = poskozeni_tum; // rozsah <0,1>, 2 = poskozeni nema vliv
+	}
 }
 
 void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height)
@@ -266,20 +271,23 @@ void bunky::bunky_cyklus(double nastaveni[])
 		//	poskozeni[n] = 0.0;
 		//}
 
-		if (kolik_RF < 0.05) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
+		if (stav[n] != -1)
 		{
-			stav[n] = -1; // apoptoza
-			trvani_cyklu[n] = 0;
-		}
-		if (kolik_zivin < 0.05)
-		{
-			stav[n] = -1; // apoptoza
-			trvani_cyklu[n] = 0;
-		}
-		if (kyslik < 0.05)
-		{
-			stav[n] = -1; // apoptoza
-			trvani_cyklu[n] = 0;
+			if (kolik_RF < 0.05) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
+			{
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
+			if (kolik_zivin < 0.05)
+			{
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
+			if (kyslik < 0.05)
+			{
+				stav[n] = -1; // apoptoza
+				trvani_cyklu[n] = 0;
+			}
 		}
 
 		if (x[n] != x[n]) // osetreni hodnot NaN pri chybe vypoctu
@@ -295,8 +303,9 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 		case -1: // apoptoza - zmensovani velikosti, vymazani
 
-			trvani_cyklu[n] += 1;
-			r[n] = r[n] - (poz_r[n] / (t_Apop / meritko)); // zmensovani bunky
+			trvani_cyklu[n]++;
+			rust[n] = (poz_r[n] / (t_Apop / meritko));
+			r[n] = r[n] - rust[n]; // zmensovani bunky
 
 			if (trvani_cyklu[n] > (t_Apop / meritko)) { // vymazani bunky
 				x.erase(x.begin() + n);
@@ -331,8 +340,9 @@ void bunky::bunky_cyklus(double nastaveni[])
 		case 0: // klid G0
 
 			doba_zivota[n] += 1;
+			trvani_cyklu[n]++;
 
-			if (doba_zivota[n] > (200.0 / meritko)) // nove rozdelene bunky maji cas se od sebe odsunout
+			if (doba_zivota[n] > (200.0 / meritko)) // nove rozdelene bunky maji cas se rozdelit
 			{
 				// ne-/vratna faze G0 (podle poskozeni DNA)
 				if ((tumor[n] == 0) && (poskozeni[n] > (prah_poskozeni[n] / 2.0)))
@@ -369,7 +379,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 			}
 
 
-			if ((mark1 + prechod_G1) == 2)
+			if ((mark1 + prechod_G1 + tumor[n]) >= 2)
 			{
 				stav[n] = 1; // vstup do G1
 				trvani_cyklu[n] = 0;
@@ -709,14 +719,14 @@ vector<double> bunky::pohyb(double meritko, int n)
 				en_y = en_y + (vzd_yy * energie);
 				en_z = en_z + (vzd_zz * energie);
 			}
-			else if (vzdalenost <= 20.0) // pohyb k blizkemu okoli
+			else if (vzdalenost <= r_bunek) // pohyb k blizkemu okoli
 			{
 				okoli2 += 1.0;
 
 				//energie = -meritko * (12.57 * vzdalenost * vzdalenost) * pow(0.0053, (3.0 / 2.0)) * exp(-0.0167 * vzdalenost * vzdalenost) / 100.0; // funkce Maxwell-Boltzmann (simulace adheze)
 				//energie = meritko * -(0.001 / exp(vzdalenost/10)); // vypocet energie posunu
 				//energie = meritko * abs((exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1.0 / (5.0 * 2500.0)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100.0); // komplexni cisla!!
-				energie = meritko * (-1.0 / exp(vzdalenost / 10.0)) / 500.0;
+				energie = meritko * (-1.0 / exp(vzdalenost / 2.0)) / 200.0;
 
 				if (energie > 0.5)
 				{
@@ -754,7 +764,7 @@ vector<double> bunky::pohyb(double meritko, int n)
 
 	if ((en1 + (prekryv / 10)) >= en2) // prioritu ma rozdeleni bunek pred priblizenim, cim vic prekryti tim spis se bunky posunou od sebe
 	{
-		do_x = x[n] + ((en_x / okoli)); // ECM ovlivnuje jak snadno se v danem smeru bunka pohybuje
+		do_x = x[n] + ((en_x / okoli));
 		do_y = y[n] + ((en_y / okoli));
 		do_z = z[n] + ((en_z / okoli));
 	}

@@ -105,7 +105,7 @@ int main(int argc, char* const argv[])
 		soubor << "t_tumor 0.95" << endl;
 		soubor << "meze 0" << endl;
 		soubor << "rozl 0" << endl;
-		soubor << "poc_dot 7" << endl;
+		soubor << "poc_dot 6" << endl;
 		soubor << "poc_dot2 0" << endl;
 		soubor << "snizovani 0.8" << endl;
 		soubor << "oprava 0.005" << endl;
@@ -135,9 +135,12 @@ int main(int argc, char* const argv[])
 	}
 
 
-	int state = 0;
+	int state = 1;
 	double pom;
 	bool nacteni = 0;
+	int vklidu = 0;
+	int program = 0;
+	bool tumAktiv = 0;
 
 // GUI
 	system("cls"); // vymazani obsahu okna
@@ -191,14 +194,19 @@ int main(int argc, char* const argv[])
 		iteraci = 1;
 		meritko = 1;
 		omezeni_r = 0;
-		vyber = 0;
+		vyber = 1;
 		tum = 0;
 		pokracovat = 1;
 		nacteni = 1;
 	}
 	else if ((strcmp(argv[1], "p1") == 0) || strcmp(argv[1], "-p1") == 0) // predvolba 1
 	{
-
+		iteraci = 8000;
+		meritko = 2.5;
+		omezeni_r = 120;
+		vyber = 1;
+		pokracovat = 1;
+		program = 1;
 	}
 	else if ((strcmp(argv[1], "p2") == 0) || strcmp(argv[1], "-p2") == 0) // predvolba 2
 	{
@@ -261,7 +269,7 @@ int main(int argc, char* const argv[])
 		}
 
 		bunky bunky;
-		bunky.inicializace(meritko, tum);
+		bunky.inicializace(meritko);
 
 
 		cout << "----------------------------------------------\n";
@@ -320,6 +328,8 @@ int main(int argc, char* const argv[])
 		int mxold = 0, myold = 0;
 		float mznew = 0, mzz = 0, mzold = 0;
 		bool zobrazeni = 0;
+
+		bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height);
 
 		double nastaveni[] = { t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber, omezeni_r};
 
@@ -416,7 +426,7 @@ int main(int argc, char* const argv[])
 				}
 			}
 
-			if (state > 0)
+			if ((ukladani == 0) && (state > 0)) // pri ukladani je obrazovka zamcena
 			{
 				bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height); // rotace podle polohy mysi
 			}
@@ -430,11 +440,34 @@ int main(int argc, char* const argv[])
 					bunky.nacist();
 					nacteni = 0;
 				}
+				vklidu = 0;
+				for (size_t i = 0; i < size(bunky.stav); i++)
+				{
+					if ((bunky.stav[i] == 0) && (tumAktiv == 0))
+					{
+						vklidu++;
+					}
+				}
+				if ((pocet_iteraci > 1000) && (vklidu > (size(bunky.x)*0.9))) // vic jak 90 % bunek je v G0 = stabilni stav
+				{
+					if (program == 1)
+					{
+						tum = 1;
+						tumAktiv = 1;
+						iteraci = pocet_iteraci + 8000;
+						cout << "\nZacatek rustu tumoru" << endl;
+					}
+				}
+				if (tum == 1)
+				{
+					bunky.ini2();
+					tum = 0;
+				}
 
 				bunky.bunky_cyklus(nastaveni);
 
 				pocet_iteraci += 1;
-				cout << "\r                                              ";
+				cout << "\r                                  ";
 				cout << "\riterace: " << pocet_iteraci << " | pocet bunek: " << size(bunky.x);
 			}
 			else if (pocet_iteraci == iteraci)
@@ -511,16 +544,18 @@ int main(int argc, char* const argv[])
 			window.display(); // zobrazeni
 
 			// ulozeni snimku obrazovky
-			if ((ukladani == 1) && (pocet_iteraci % 50) == 1)
+			if ((ukladani == 1) && (pocet_iteraci % 20) == 1)
 			{
 				sf::Image obr;
-				string nazev, pom;
+				string nazev, pom, pom2;
 				pom = to_string(pocet_iteraci);
+				pom2 = to_string(zobrazeni);
 
-				nazev = "obr/iter_" + pom + ".png";
+				nazev = "obr/Obr_" + pom2 + "_iter_" + pom + ".png";
 				obr = window.capture();
 				obr.saveToFile(nazev);
 				//sf::sleep(sf::milliseconds(10));
+				zobrazeni = !zobrazeni; // stridani zobrazeni
 			}
 			
 		}

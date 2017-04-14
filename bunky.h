@@ -25,7 +25,8 @@ class bunky {
 
 public:
 	void bunky_cyklus(double nastaveni[]);
-	void inicializace(double meritko, bool tum);
+	void inicializace(double meritko);
+	void ini2();
 	void transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
 	vector<double> pohyb(double meritko, int n);
 	void ulozit();
