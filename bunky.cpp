@@ -245,7 +245,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 		// regulace poctu (utlacovane a poskozene jsou ve stresu -> vyssi pst apoptozy)
 		if (doba_zivota[n] > (200.0 / meritko)) // nove rozdelene bunky maji cas se od sebe odsunout
 		{
-			poskozeni[n] = poskozeni[n] + ((kolik_toxinu + meta[n] + prekryti[n] / 20.0) / 30.0); // vysoke prekryti bunek (utlacovani) a toxiny v okoli zpusobuji poskozeni
+			poskozeni[n] = poskozeni[n] + ((2.0*kolik_toxinu + meta[n] + prekryti[n]/5.0) / 10.0); // vysoke prekryti bunek (utlacovani) a toxiny v okoli zpusobuji poskozeni
 		}
 
 		// regulace velikosti
@@ -361,7 +361,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 
 			mark1 = 0;
-			if ((dotyku[n] <= poc_dot) && navrat[n]) // podle [26] zavisi na poctu dotyku(hustote prostredi)
+			if ((dotyku[n] < (poc_dot-1)) && navrat[n]) // podle [26] zavisi na poctu dotyku(hustote prostredi)
 			{
 				trvani_cyklu[n] += 1; // jak dlouho jsou priznive podminky(= synteza proteinu)
 				if (trvani_cyklu[n] > (t_cekani / meritko)) // cekani na syntezu proteinu
@@ -395,7 +395,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 			mark3 = 1;
 			if (doba_zivota[n] > (200 / meritko)) // hned po deleni jsou bunky "imunni"
 			{
-				if ((dotyku[n] > poc_dot) && ((tumor[n] - supresory) != 1)) // maximalni pocet povolenych dotyku, pro tumor bez supresoru nema efekt
+				if ((dotyku[n] >= poc_dot) && ((tumor[n] - supresory) != 1)) // maximalni pocet povolenych dotyku, pro tumor bez supresoru nema efekt
 				{
 					mark3 = 0;
 					stav[n] = 0; // prechod do G0
@@ -518,9 +518,22 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 				// vytvoreni dcerinych bunek
 				srand(chrono::duration_cast<chrono::microseconds>(chrono::steady_clock::now().time_since_epoch()).count()); // nahodna cisla
+
 				kam_x = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				while (abs(kam_x) < 1.0)
+				{
+					kam_x = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				}
 				kam_y = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				while (abs(kam_y) < 1.0)
+				{
+					kam_y = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				}
 				kam_z = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				while (abs(kam_z) < 1.0)
+				{
+					kam_z = 5.0 * (((rand() % 1001) / 1000.0) - 0.5);
+				}
 
 				x.push_back(x[n] + kam_x);
 				x.push_back(x[n] - kam_x);
@@ -635,7 +648,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 			{
 				do_x = x[ko];
 				do_z = z[ko];
-				dotyku[ko] += 3;
+				dotyku[ko] += 2;
 			}
 		}
 		if (deska == 1)
@@ -709,7 +722,8 @@ vector<double> bunky::pohyb(double meritko, int n)
 				// vypocet energie posunu - deleni bunek (prekryti)
 				//energie = meritko * (exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1 / (5 * 2500)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100;
 				//energie = meritko * -vzdalenost/100;
-				energie = meritko * pow(vzdalenost, 2.0) / 500;
+				//energie = meritko * pow(vzdalenost, 2.0) / 500;
+				energie = meritko * (1.0 - exp(vzdalenost)) / 150.0;
 
 				if (energie > 0.5)
 				{
@@ -726,7 +740,7 @@ vector<double> bunky::pohyb(double meritko, int n)
 				//energie = -meritko * (12.57 * vzdalenost * vzdalenost) * pow(0.0053, (3.0 / 2.0)) * exp(-0.0167 * vzdalenost * vzdalenost) / 100.0; // funkce Maxwell-Boltzmann (simulace adheze)
 				//energie = meritko * -(0.001 / exp(vzdalenost/10)); // vypocet energie posunu
 				//energie = meritko * abs((exp(r[n] + r[i] - vzdalenost), 5.0 / 2.0) * (1.0 / (5.0 * 2500.0)) * sqrt((r[n] + r[i]) / (r[n] + r[i])) / 100.0); // komplexni cisla!!
-				energie = meritko * (-1.0 / exp(vzdalenost / 2.0)) / 200.0;
+				energie = meritko * (-1.0 / exp(vzdalenost / 2.0)) / 400.0;
 
 				if (energie > 0.5)
 				{
@@ -762,17 +776,17 @@ vector<double> bunky::pohyb(double meritko, int n)
 	//	do_z = z[n] + ((en_z / okoli2) * ECM_z[f]);
 	//}
 
-	if ((en1 + (prekryv / 10)) >= en2) // prioritu ma rozdeleni bunek pred priblizenim, cim vic prekryti tim spis se bunky posunou od sebe
+	if ((en1 + (prekryv / 2.0)) >= en2) // prioritu ma rozdeleni bunek pred priblizenim, cim vic prekryti tim spis se bunky posunou od sebe
 	{
-		do_x = x[n] + ((en_x / okoli));
-		do_y = y[n] + ((en_y / okoli));
-		do_z = z[n] + ((en_z / okoli));
+		do_x = x[n] + ((en_x));
+		do_y = y[n] + ((en_y));
+		do_z = z[n] + ((en_z));
 	}
 	else
 	{
-		do_x = x[n] + ((en_x2 / okoli2));
-		do_y = y[n] + ((en_y2 / okoli2));
-		do_z = z[n] + ((en_z2 / okoli2));
+		do_x = x[n] + ((en_x2));
+		do_y = y[n] + ((en_y2));
+		do_z = z[n] + ((en_z2));
 	}
 
 	vector<double> vystup;

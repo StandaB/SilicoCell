@@ -108,7 +108,7 @@ int main(int argc, char* const argv[])
 		soubor << "poc_dot 6" << endl;
 		soubor << "poc_dot2 0" << endl;
 		soubor << "snizovani 0.8" << endl;
-		soubor << "oprava 0.005" << endl;
+		soubor << "oprava 0.001" << endl;
 		soubor << "metabolismus_0 0" << endl;
 		soubor << "deska 0" << endl;
 		soubor << "supresory 0" << endl;
@@ -202,8 +202,8 @@ int main(int argc, char* const argv[])
 	else if ((strcmp(argv[1], "p1") == 0) || strcmp(argv[1], "-p1") == 0) // predvolba 1
 	{
 		iteraci = 8000;
-		meritko = 2.5;
-		omezeni_r = 120;
+		meritko = 4;
+		omezeni_r = 100;
 		vyber = 1;
 		pokracovat = 1;
 		program = 1;
@@ -275,11 +275,11 @@ int main(int argc, char* const argv[])
 		cout << "----------------------------------------------\n";
 		if (omezeni_r > 0)
 		{
-			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem omezen na " << omezeni_r << " um." << endl;
+			cout << "Nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany polomer omezen na " << omezeni_r << " um." << endl;
 		}
 		else
 		{
-			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
+			cout << "Nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
 		}
 		if (tum == 1)
 		{
@@ -555,7 +555,10 @@ int main(int argc, char* const argv[])
 				obr = window.capture();
 				obr.saveToFile(nazev);
 				//sf::sleep(sf::milliseconds(10));
-				zobrazeni = !zobrazeni; // stridani zobrazeni
+				if (program == 1)
+				{
+					zobrazeni = !zobrazeni; // stridani zobrazeni
+				}
 			}
 			
 		}
