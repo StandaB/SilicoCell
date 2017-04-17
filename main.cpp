@@ -75,7 +75,7 @@ int main(int argc, char* const argv[])
 		}
 		soubor.close();
 
-		// zapis parametru do promennych
+		// cteni parametru do promennych
 		int zf = 1; // zacatek nastaveni MAIN
 		t_G1 = param[zf];
 		t_S = param[zf + 1];
@@ -145,10 +145,13 @@ int main(int argc, char* const argv[])
 // GUI
 	system("cls"); // vymazani obsahu okna
 	if ((argc != 2) && (argc != 6)) { // chybne zadani
-		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni r> <prostorovy model> <tumor>" << endl;
-		cout << "pro napovedu: " << argv[0] << " -h" << endl;
-		cout << "Dostupne programy:	-s (standardni model s tumorem)" << endl;
-		cout << "			-n (nacteni existujiciho modelu)";
+		cout << "Pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni r> <prostorovy model> <tumor>" << endl;
+		cout << "Napoveda:  " << argv[0] << " -h" << endl;
+		cout << "Dostupne rezimy: -s (standardni model s tumorem)" << endl;
+		cout << "		 -n (nacteni existujiciho modelu)" << endl;
+		cout << "		 -p1 (predvolba 1, tumor ve tkani)" << endl;
+		cout << "		 -p2 (predvolba 2, simulace poraneni)" << endl;
+		cout << "		 -p3 (predvolba 3, dodani rustoveho faktoru)";
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
@@ -209,6 +212,10 @@ int main(int argc, char* const argv[])
 		program = 1;
 	}
 	else if ((strcmp(argv[1], "p2") == 0) || strcmp(argv[1], "-p2") == 0) // predvolba 2
+	{
+
+	}
+	else if ((strcmp(argv[1], "p3") == 0) || strcmp(argv[1], "-p3") == 0) // predvolba 3
 	{
 
 	}
