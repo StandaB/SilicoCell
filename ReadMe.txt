@@ -3,7 +3,7 @@ a novel tool for tumor and cell growth simulation.
 
 CZ
 ## 	Pozadavky:
-	-System Windows s aktualizaci Microsoft Visual C++ 2015 Redistributable
+	-System Windows
 	-Graficka karta podporujici OpenGL
 	-Monitor s rozlisenim 1024x768 a vyssi
 
@@ -16,7 +16,7 @@ CZ
 
 EN
 ## 	Requirements:
-	-Windows OS with Microsoft Visual C++ 2015 Redistributable update
+	-Windows OS
 	-Graphics card with OpenGL support
 	-Display with resolution 1024x768 or better
 
