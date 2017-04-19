@@ -25,11 +25,13 @@ class bunky {
 
 public:
 	void bunky_cyklus(double nastaveni[]);
-	void inicializace(double meritko, bool tum);
+	void inicializace(double meritko);
+	void ini2();
 	void transform2(int poz_x, int poz_y, int poz_z, float screen_width, float screen_height);
 	vector<double> pohyb(double meritko, int n);
 	void ulozit();
 	void nacist();
+	void vymazani();
 
 
 	int posun_x = 0;
@@ -71,11 +73,11 @@ private:
 	double kolik_RF;
 	double kolik_toxinu;
 
-	bool preskok = 0;
+	double t_tumor = 1.0;
 
 	// parametry kolonie
 	int kolonie = 100;
-	double r_bunek = 15;
+	double r_bunek = 15.0;
 	vector<double> poz_r;
 	int stav_bb;
 	vector<int> doba_zivota;
@@ -127,6 +129,8 @@ private:
 	bool deska = 0;
 	bool supresory = 0;
 	double poskozeni_tum = 1;
+	double vaha = 1;
+	double zrychleni = 1;
 
 	int mark1, mark2, mark3, mark4;
 	

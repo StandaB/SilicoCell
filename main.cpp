@@ -9,6 +9,7 @@
 #include <string>
 #include <time.h>
 #include <chrono>
+#include <windows.h>
 
 
 using namespace std;
@@ -34,6 +35,8 @@ static char *aktualni_cas(char *delka) {
 
 int main(int argc, char* const argv[])
 {
+	SetConsoleTitle(TEXT("SilicoCell model"));
+
 	//std::thread t[4];
 
 	int horizontal = 0;
@@ -72,7 +75,7 @@ int main(int argc, char* const argv[])
 		}
 		soubor.close();
 
-		// zapis parametru do promennych
+		// cteni parametru do promennych
 		int zf = 1; // zacatek nastaveni MAIN
 		t_G1 = param[zf];
 		t_S = param[zf + 1];
@@ -87,29 +90,25 @@ int main(int argc, char* const argv[])
 		ofstream soubor("config.ini"); // vytvoreni konfigu kdyz neexistuje
 
 		soubor << "=MAIN= 0" << endl;
-		soubor << "t_G1 660" << endl;
-		soubor << "t_S 480" << endl;
-		soubor << "t_G2 240" << endl;
-		soubor << "t_M 60" << endl;
+		soubor << "t_G1 540" << endl;
+		soubor << "t_S 600" << endl;
+		soubor << "t_G2 270" << endl;
+		soubor << "t_M 30" << endl;
 		soubor << "t_Apop 180" << endl;
 		soubor << "t_cekani 50" << endl;
 		soubor << "ukladani 0" << endl;
 		soubor << "=VYPOCTY= 1" << endl;
-		soubor << "prostor 50" << endl;
+		soubor << "prostor 60" << endl;
 		soubor << "=BUNKY= 2" << endl;
 		soubor << "kolonie 100" << endl;
-		soubor << "r_bunek 15" << endl;
-		soubor << "preskok 0" << endl;
-		soubor << "meze 50" << endl;
-		soubor << "rozl 20" << endl;
-		soubor << "poc_dot 4" << endl;
-		soubor << "poc_dot2 8" << endl;
-		soubor << "snizovani 0.1" << endl;
-		soubor << "oprava 0.01" << endl;
-		soubor << "metabolismus_0 0.075" << endl;
-		soubor << "deska 0" << endl;
-		soubor << "supresory 0" << endl;
-		soubor << "poskozeni_tum 0.75";
+		soubor << "r_bunek 10" << endl;
+		soubor << "t_tumor 0.95" << endl;
+		soubor << "poc_dot 6" << endl;
+		soubor << "transport 0.8" << endl;
+		soubor << "oprava 0.001" << endl;
+		soubor << "rovina 0" << endl;
+		soubor << "supresory 0";
+		//soubor << "poskozeni_tum 0.5";
 
 		soubor.close();
 	}
@@ -132,16 +131,24 @@ int main(int argc, char* const argv[])
 	}
 
 
-	int state = 0;
-	double pom, pom2;
+	int state = 1;
+	double pom;
+	bool nacteni = 0;
+	int vklidu = 0;
+	int program = 0;
+	bool pAktiv = 0;
+	bool niceni = 0;
 
 // GUI
 	system("cls"); // vymazani obsahu okna
 	if ((argc != 2) && (argc != 6)) { // chybne zadani
-		cout << "pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni x> <omezeni z> <prostorovy model> <tumor>" << endl;
-		cout << "pro napovedu: " << argv[0] << " -h" << endl;
-		cout << "Dostupne programy:	-s (standardni model s tumorem)";
-		//cout << "pro standardni nastaveni: " << argv[0] << " -s (5 000 iteraci, meritko 2.5, omezeni 200 um, model plochy, s tumorem)" << endl;
+		cout << "Pouziti: " << argv[0] << " <pocet iteraci> <casove meritko> <omezeni r> <prostorovy model> <tumor>" << endl;
+		cout << "Napoveda:  " << argv[0] << " -h" << endl;
+		cout << "Dostupne rezimy: -n (nacteni existujiciho modelu)" << endl;
+		cout << "		 -p (standardni model s tumorem)" << endl;
+		cout << "		 -p1 (predvolba 1, tumor ve tkani)" << endl;
+		cout << "		 -p2 (predvolba 2, simulace poraneni)" << endl;
+		cout << "		 -p3 (predvolba 3, dodani rustoveho faktoru)";
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
@@ -159,6 +166,7 @@ int main(int argc, char* const argv[])
 		cout << "		- 0 pro zadny model (idealni podminky)\n";
 		cout << "		- 1 pro plosny model\n";
 		cout << "		- 2 pro model cevy\n";
+		cout << "		- 3 pro bodovy zdroj\n";
 		cout << "	5. simulace rustu tumoru (y/n)\n";
 		cout << "Napr. 'bunky 2000 2 150 1 y'\n\n";
 
@@ -174,13 +182,49 @@ int main(int argc, char* const argv[])
 		cout << "xbeleh05@stud.feec.vutbr.cz\n";
 		cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 	}
-	else if ((strcmp(argv[1], "s") == 0) || strcmp(argv[1], "-s") == 0) { // standardni nastaveni
+	else if ((strcmp(argv[1], "p") == 0) || strcmp(argv[1], "-p") == 0) { // standardni nastaveni
 		iteraci = 5000;
 		meritko = 2.5;
-		omezeni_r = 200;
+		omezeni_r = 150;
 		vyber = 1;
 		tum = 1;
 		pokracovat = 1;
+	}
+	else if ((strcmp(argv[1], "n") == 0) || strcmp(argv[1], "-n") == 0) { // standardni nastaveni
+		iteraci = 1;
+		meritko = 1;
+		omezeni_r = 0;
+		vyber = 1;
+		tum = 0;
+		pokracovat = 1;
+		nacteni = 1;
+	}
+	else if ((strcmp(argv[1], "p1") == 0) || strcmp(argv[1], "-p1") == 0) // predvolba 1
+	{
+		iteraci = 10000;
+		meritko = 4;
+		omezeni_r = 100;
+		vyber = 1;
+		pokracovat = 1;
+		program = 1;
+	}
+	else if ((strcmp(argv[1], "p2") == 0) || strcmp(argv[1], "-p2") == 0) // predvolba 2
+	{
+		iteraci = 10000;
+		meritko = 4;
+		omezeni_r = 100;
+		vyber = 1;
+		pokracovat = 1;
+		program = 2;
+	}
+	else if ((strcmp(argv[1], "p3") == 0) || strcmp(argv[1], "-p3") == 0) // predvolba 3
+	{
+		iteraci = 10000;
+		meritko = 4;
+		omezeni_r = 100;
+		vyber = 3;
+		pokracovat = 1;
+		program = 3;
 	}
 
 ////// testovani
@@ -202,7 +246,7 @@ int main(int argc, char* const argv[])
 				iteraci = 1000;
 			}
 			stringstream(argv[2]) >> pom;
-			if (pom >= 1 && pom <= 10)
+			if (pom >= 1 && pom <= 5)
 			{
 				meritko = pom;
 			}
@@ -224,6 +268,10 @@ int main(int argc, char* const argv[])
 			{
 				vyber = 2;
 			}
+			else if (pom == 3)
+			{
+				vyber = 3;
+			}
 			else
 			{
 				vyber = 0;
@@ -235,17 +283,17 @@ int main(int argc, char* const argv[])
 		}
 
 		bunky bunky;
-		bunky.inicializace(meritko, tum);
+		bunky.inicializace(meritko);
 
 
 		cout << "----------------------------------------------\n";
 		if (omezeni_r > 0)
 		{
-			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem omezen na " << omezeni_r << " um." << endl;
+			cout << "Nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany polomer omezen na " << omezeni_r << " um." << endl;
 		}
 		else
 		{
-			cout << "nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
+			cout << "Nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
 		}
 		if (tum == 1)
 		{
@@ -276,7 +324,7 @@ int main(int argc, char* const argv[])
 		glClearColor(1.f, 1.f, 1.f, 0.f);
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		glDepthMask(GL_TRUE);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
@@ -294,8 +342,11 @@ int main(int argc, char* const argv[])
 		int mxold = 0, myold = 0;
 		float mznew = 0, mzz = 0, mzold = 0;
 		bool zobrazeni = 0;
+		int pauza = 0;
 
-		double nastaveni[] = { t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber, omezeni_r};
+		bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height);
+
+		double nastaveni[] = { t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber, omezeni_r, niceni};
 
 		auto cas_start = std::chrono::high_resolution_clock::now();
 
@@ -324,6 +375,15 @@ int main(int argc, char* const argv[])
 						ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
 						logfile << aktualni_cas(cas) << " - Program ukoncen pri iteraci " << pocet_iteraci << ", pocet bunek: " << size(bunky.x) << endl;
 						logfile.close();
+
+						ofstream pocty("pocty.txt");
+						pocty << aktualni_cas(cas) << endl;
+						for (size_t i = 0; i < size(bunky.poctyB1); i++)
+						{
+							pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << endl;
+						}
+						pocty << endl;
+						pocty.close();
 					}
 				}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
@@ -340,11 +400,28 @@ int main(int argc, char* const argv[])
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 				{
 					bunky.ulozit(); // ulozeni dat kolonie
+					sf::sleep(sf::milliseconds(100));
 				}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::N))
 				{
 					bunky.nacist(); // nacteni dat kolonie
 					pocet_iteraci = 0;
+					sf::sleep(sf::milliseconds(100));
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
+				{
+					if (pauza == 0)
+					{
+						pauza = pocet_iteraci;
+						pocet_iteraci = iteraci + 1;
+						sf::sleep(sf::milliseconds(100));
+					}
+					else
+					{
+						pocet_iteraci = pauza;
+						pauza = 0;
+						sf::sleep(sf::milliseconds(100));
+					}
 				}
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
@@ -381,7 +458,7 @@ int main(int argc, char* const argv[])
 				}
 			}
 
-			if (state > 0)
+			if ((ukladani == 0) && (state > 0)) // pri ukladani je obrazovka zamcena
 			{
 				bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height); // rotace podle polohy mysi
 			}
@@ -390,12 +467,58 @@ int main(int argc, char* const argv[])
 			if (pocet_iteraci < iteraci)
 			{
 				
-				//bunky.pohyb(meritko, omezeni, omezeni_x, omezeni_z);
+				if (nacteni == 1)
+				{
+					bunky.nacist();
+					nacteni = 0;
+				}
+				if (pAktiv == 0)
+				{
+					vklidu = 0;
+					for (size_t i = 0; i < size(bunky.stav); i++)
+					{
+						if (bunky.stav[i] == 0)
+						{
+							vklidu++;
+						}
+					}
+					if ((pocet_iteraci > 1000) && (vklidu > (size(bunky.x)*0.9))) // vic jak 90 % bunek je v G0 = stabilni stav
+					{
+						pAktiv = 1;
+
+						if (program == 1)
+						{
+							tum = 1;
+							iteraci = 5000;
+							pocet_iteraci = 1;
+							cout << "\nZacatek rustu tumoru" << endl;
+						}
+						if (program == 2)
+						{
+							iteraci = 5000;
+							pocet_iteraci = 1;
+							bunky.vymazani();
+						}
+						if (program == 3)
+						{
+							nastaveni[9] = 1;
+							iteraci = 5000;
+							pocet_iteraci = 1;
+							cout << "\nZacatek tvorby dutiny" << endl;
+						}
+					}
+				}
+				
+				if (tum == 1)
+				{
+					bunky.ini2();
+					tum = 0;
+				}
 
 				bunky.bunky_cyklus(nastaveni);
 
 				pocet_iteraci += 1;
-				cout << "\r                                              ";
+				cout << "\r                                  ";
 				cout << "\riterace: " << pocet_iteraci << " | pocet bunek: " << size(bunky.x);
 			}
 			else if (pocet_iteraci == iteraci)
@@ -409,15 +532,6 @@ int main(int argc, char* const argv[])
 				ofstream logfile("log.txt", std::ios_base::app | std::ios_base::out);
 				logfile << aktualni_cas(cas) << " - Ukonceni simulace. Delka vypoctu: " << cas_rozdil.count() << " sekund, " << size(bunky.x) << " bunek" << endl;
 				logfile.close();
-
-				ofstream pocty("pocty.txt");
-				pocty << aktualni_cas(cas) << endl;
-				for (size_t i = 0; i < size(bunky.poctyB1); i++)
-				{
-					pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << endl;
-				}
-				pocty << endl;
-				pocty.close();
 
 				pocet_iteraci += 1;
 			}
@@ -481,16 +595,21 @@ int main(int argc, char* const argv[])
 			window.display(); // zobrazeni
 
 			// ulozeni snimku obrazovky
-			if ((ukladani == 1) && (pocet_iteraci % 50) == 1)
+			if ((ukladani == 1) && (pocet_iteraci % 20) == 1)
 			{
 				sf::Image obr;
-				std:string nazev, pom;
+				string nazev, pom, pom2;
 				pom = to_string(pocet_iteraci);
+				pom2 = to_string(zobrazeni);
 
-				nazev = "obr/iter_" + pom + ".png";
+				nazev = "obr/Obr_" + pom2 + "_iter_" + pom + ".png";
 				obr = window.capture();
 				obr.saveToFile(nazev);
 				//sf::sleep(sf::milliseconds(10));
+				if (program == 1)
+				{
+					zobrazeni = !zobrazeni; // stridani zobrazeni
+				}
 			}
 			
 		}
