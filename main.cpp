@@ -148,7 +148,7 @@ int main(int argc, char* const argv[])
 		cout << "		 -p (standardni model s tumorem)" << endl;
 		cout << "		 -p1 (predvolba 1, tumor ve tkani)" << endl;
 		cout << "		 -p2 (predvolba 2, simulace poraneni)" << endl;
-		cout << "		 -p3 (predvolba 3, dodani rustoveho faktoru)";
+		cout << "		 -p3 (predvolba 3, vytvoreni dutiny)";
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
