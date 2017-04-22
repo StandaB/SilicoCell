@@ -20,33 +20,35 @@ void bunky::inicializace(double meritko)
 		soubor.close();
 
 		// zapis parametru do promennych
-		int zf = 9; // zacatek nastaveni VYPOCTY
+		int zf = 10; // zacatek nastaveni VYPOCTY
 		prostor = param[zf]; // vstup do vypoctu prostorovych koncentraci
-		kolonie = param[zf + 2];
-		r_bunek = param[zf + 3];
-		t_tumor = param[zf + 4];
-		poc_dot = param[zf + 5];
-		snizovani = param[zf + 6];
-		oprava = param[zf + 7]; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
-		deska = param[zf + 8];
-		supresory = param[zf + 9];
-		//poskozeni_tum = param[zf + 10];
+		pokles = param[zf + 1];
+		kolonie = param[zf + 3];
+		r_bunek = param[zf + 4];
+		t_tumor = param[zf + 5];
+		poc_dot = param[zf + 6];
+		snizovani = param[zf + 7];
+		oprava = param[zf + 8]; // kolik poskozeni bunky se opravi za 1 iteraci <0,1>
+		deska = param[zf + 9];
+		supresory = param[zf + 10];
+		poskozeni_b = param[zf + 11];
+		prah_ap = param[zf + 12];
 	}
 
 	// inicializace pocatecni kolonie
 	for (size_t i = 0; i < kolonie; i++)
 	{
-		x.push_back(posun_x + (30 * (((rand() % 1001) / 1000.0) - 0.5)));
-		y.push_back(posun_y + (30 * (((rand() % 1001) / 1000.0) - 0.5)));
-		z.push_back(30 * (((rand() % 1001) / 1000.0) - 0.5));
+		x.push_back(posun_x + (40 * (((rand() % 1001) / 1000.0) - 0.5)));
+		y.push_back(posun_y + (40 * (((rand() % 1001) / 1000.0) - 0.5)));
+		z.push_back(40 * (((rand() % 1001) / 1000.0) - 0.5));
 		r.push_back(r_bunek * (1 - ((((rand() % 1001) / 1000.0) - 0.5) / 20.0)));
 		poz_r.push_back(r_bunek);
 		stav.push_back(1);
 		doba_zivota.push_back(0);
 		poskozeni.push_back(((rand() % 1001) / 1000.0));
-		prah_apop.push_back(5.0e-4);
+		prah_apop.push_back(prah_ap);
 		prah_ziviny.push_back(0);
-		prah_poskozeni.push_back(0.5);
+		prah_poskozeni.push_back(poskozeni_b);
 		prah_deleni.push_back(0.5); // RF
 		metabolismus.push_back(0);
 		dotyku.push_back(0);
@@ -126,7 +128,7 @@ void bunky::transform2(int poz_x, int poz_y, int poz_z, float screen_width, floa
 	// otaceni
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0, 0, -poz_z);
+	//glTranslatef(0, 0, -poz_z);
 
 	glTranslatef((screen_width / 2) + prumer_x, (screen_height / 2) + prumer_y, 0);
 	glRotatef(poz_x, 0, 1, 0);
@@ -171,13 +173,13 @@ void bunky::bunky_cyklus(double nastaveni[])
 	{
 
 		// koncentrace latek v okoli bunky
-		kolik_zivin = vypocty.ziviny(x[n], y[n], z[n], vyber, prostor);
-		kyslik = vypocty.kyslik(x[n], y[n], z[n], vyber, prostor);
-		kolik_RF = vypocty.RF(x[n], y[n], z[n], vyber, prostor);
+		kolik_zivin = vypocty.ziviny(x[n], y[n], z[n], vyber, prostor, pokles);
+		kyslik = vypocty.kyslik(x[n], y[n], z[n], vyber, prostor, pokles);
+		kolik_RF = vypocty.RF(x[n], y[n], z[n], vyber, prostor, pokles);
 
 		if (niceni)
 		{
-			kolik_toxinu = vypocty.toxiny(x[n], y[n], z[n], vyber, prostor);
+			kolik_toxinu = vypocty.toxiny(x[n], y[n], z[n], vyber, prostor, pokles);
 		}
 		else
 		{
@@ -304,6 +306,9 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 // // bunecny cyklus // //
 		stav_bb = stav[n];
+		mt19937 gen(chrono::duration_cast<chrono::microseconds>(chrono::steady_clock::now().time_since_epoch()).count()); // seed pro nahodna cisla pst
+		uniform_int_distribution<unsigned long long> nah_c(0.0, 1000000000.0);
+
 		switch (stav_bb) {
 
 		case -1: // apoptoza - zmensovani velikosti, vymazani
@@ -453,11 +458,14 @@ void bunky::bunky_cyklus(double nastaveni[])
 					stav[n] = -1; // apoptoza
 					trvani_cyklu[n] = 0;
 				}
-				else if ((((rand() % 100001) / 100000.0) / poskozeni[n]) < (prah_apop[n] / meritko)) // kontrolni bod
+				else if (((nah_c(gen) / 1000000000.0) - poskozeni[n]) < (prah_apop[n] / meritko)) // kontrolni bod
 				{
-					mark2 = 0;
-					stav[n] = -1; // apoptoza
-					trvani_cyklu[n] = 0;
+					if ((tumor[n] - supresory) != 1)
+					{
+						mark2 = 0;
+						stav[n] = -1; // apoptoza
+						trvani_cyklu[n] = 0;
+					}
 				}
 
 				// restrikcni bod
@@ -511,10 +519,13 @@ void bunky::bunky_cyklus(double nastaveni[])
 			{
 				trvani_cyklu[n] = trvani_cyklu[n] + 1;
 
-				if ((((rand() % 10001) / 10000.0) / poskozeni[n]) < (prah_apop[n] * 2 / meritko)) // kontrolni bod
+				if (((nah_c(gen) / 1000000000.0) - poskozeni[n]) < (2.0 * prah_apop[n] / meritko)) // 2x kontrolni bod
 				{
-					stav[n] = -1; // apoptoza
-					trvani_cyklu[n] = 0;
+					if ((tumor[n] - supresory) != 1)
+					{
+						stav[n] = -1; // apoptoza
+						trvani_cyklu[n] = 0;
+					}
 				}
 			}
 			else // deleni

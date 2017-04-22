@@ -5,11 +5,11 @@
 bunky b;
 
 
-double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor)
+double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor, double pokles)
 {
 	if (vyber == 1) // plocha
 	{
-		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)) - 0); // -0.xx kdyz u zdroje neni 100% zivin
+		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)));
 	}
 	else if (vyber == 2) // ceva
 	{
@@ -26,6 +26,8 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor
 		vysledek = exp(-(sqrt( pow((xx - b.posun_x), 2.0) + pow((yy - b.posun_y), 2.0) + pow(zz, 2.0))) / prostor);
 	}
 	
+	vysledek = vysledek - pokles;
+
 	if (vysledek < 0)
 	{
 		vysledek = 0;
@@ -38,11 +40,11 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor
 	return(vysledek);
 }
 
-double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor)
+double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor, double pokles)
 {
 	if (vyber == 1)
 	{
-		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)) - 0);
+		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)));
 	}
 	else if (vyber == 2)
 	{
@@ -59,6 +61,8 @@ double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor
 		vysledek = exp(-(sqrt(pow((xx - b.posun_x), 2.0) + pow((yy - b.posun_y), 2.0) + pow(zz, 2.0))) / prostor);
 	}
 
+	vysledek = vysledek - pokles;
+
 	if (vysledek < 0)
 	{
 		vysledek = 0;
@@ -71,7 +75,7 @@ double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor
 	return(vysledek);
 }
 
-double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor)
+double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor, double pokles)
 {
 	//if (vyber == 1)
 	//{
@@ -106,11 +110,11 @@ double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor
 	return(vysledek);
 }
 
-double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor)
+double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor, double pokles)
 {
 	if (vyber == 1)
 	{
-		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)) - 0);
+		vysledek = abs(pow((1.0 / 2.0), (abs(yy - b.posun_y) / prostor)));
 	}
 	else if (vyber == 2)
 	{
@@ -126,6 +130,8 @@ double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor)
 	{
 		vysledek = exp(-(sqrt(pow((xx - b.posun_x), 2.0) + pow((yy - b.posun_y), 2.0) + pow(zz, 2.0))) / prostor);
 	}
+
+	vysledek = vysledek - pokles;
 
 	if (vysledek < 0)
 	{

@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <iomanip>
+#include <random>
 
 using namespace std;
 
@@ -83,10 +85,13 @@ private:
 	vector<int> doba_zivota;
 	vector<double> poskozeni;
 	double oprava;
+	double poskozeni_b;
+	double prah_ap;
 	vector<double> prah_apop;
 	vector<double> prah_RF;
 	vector<int> dotyku;
 	vector<double> prekryti;
+	double pokles;
 
 	vector<double> rust;
 	vector<double> trvani_cyklu;

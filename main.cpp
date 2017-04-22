@@ -50,6 +50,7 @@ int main(int argc, char* const argv[])
 	double omezeni_r = 0;
 	int vyber = 1;
 	bool ukladani = 0;
+	double korekce = 2;
 
 	// // casy // //
 	double meritko = 1.0;
@@ -84,6 +85,7 @@ int main(int argc, char* const argv[])
 		t_Apop = param[zf + 4];
 		t_cekani = param[zf + 5];
 		ukladani = param[zf + 6];
+		korekce = param[zf + 7];
 	}
 	else
 	{
@@ -95,10 +97,12 @@ int main(int argc, char* const argv[])
 		soubor << "t_G2 270" << endl;
 		soubor << "t_M 30" << endl;
 		soubor << "t_Apop 180" << endl;
-		soubor << "t_cekani 50" << endl;
+		soubor << "t_cekani 180" << endl;
 		soubor << "ukladani 0" << endl;
+		soubor << "korekce_r 2" << endl;
 		soubor << "=VYPOCTY= 1" << endl;
-		soubor << "prostor 60" << endl;
+		soubor << "prostor 100" << endl;
+		soubor << "pokles 0.2" << endl;
 		soubor << "=BUNKY= 2" << endl;
 		soubor << "kolonie 100" << endl;
 		soubor << "r_bunek 10" << endl;
@@ -107,8 +111,9 @@ int main(int argc, char* const argv[])
 		soubor << "transport 0.8" << endl;
 		soubor << "oprava 0.001" << endl;
 		soubor << "rovina 0" << endl;
-		soubor << "supresory 0";
-		//soubor << "poskozeni_tum 0.5";
+		soubor << "supresory 0" << endl;
+		soubor << "poskozeni 0.5" << endl;
+		soubor << "prah_ap 0.005";
 
 		soubor.close();
 	}
@@ -185,7 +190,7 @@ int main(int argc, char* const argv[])
 	else if ((strcmp(argv[1], "p") == 0) || strcmp(argv[1], "-p") == 0) { // standardni nastaveni
 		iteraci = 5000;
 		meritko = 2.5;
-		omezeni_r = 150;
+		omezeni_r = 100;
 		vyber = 1;
 		tum = 1;
 		pokracovat = 1;
@@ -295,7 +300,7 @@ int main(int argc, char* const argv[])
 		{
 			cout << "Nastaveno meritko " << meritko << "x pro pocet iteraci " << iteraci << ". Modelovany objem neni omezen." << endl;
 		}
-		if (tum == 1)
+		if (tum == 1 || program == 1)
 		{
 			cout << "Simulace rustu tumoru\n";
 		}
@@ -423,7 +428,7 @@ int main(int argc, char* const argv[])
 						sf::sleep(sf::milliseconds(100));
 					}
 				}
-				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) // otaceni simulaci
 				{
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
@@ -434,14 +439,14 @@ int main(int argc, char* const argv[])
 					mxnew = mxold - mxx + sf::Mouse::getPosition(window).x;
 					mynew = myold + myy - sf::Mouse::getPosition(window).y;
 				}
-				if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
 						state = 2;
 						mzz = sf::Mouse::getPosition(window).y;
 					}
-					mznew = mzold - mzz + sf::Mouse::getPosition(window).y;
+					mznew = mzold - mzz + sf::Mouse::getPosition(window).y; // zobrazeni rezu
 				}
 				if (Event.type == sf::Event::MouseButtonReleased)
 				{
@@ -452,7 +457,8 @@ int main(int argc, char* const argv[])
 					}
 					else if (state == 2)
 					{
-						mzold = mznew;
+						//mzold = mznew;
+						mzold = 0;
 					}
 					state = 0;
 				}
@@ -533,6 +539,15 @@ int main(int argc, char* const argv[])
 				logfile << aktualni_cas(cas) << " - Ukonceni simulace. Delka vypoctu: " << cas_rozdil.count() << " sekund, " << size(bunky.x) << " bunek" << endl;
 				logfile.close();
 
+				ofstream pocty("pocty.txt");
+				pocty << aktualni_cas(cas) << endl;
+				for (size_t i = 0; i < size(bunky.poctyB1); i++)
+				{
+					pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << endl;
+				}
+				pocty << endl;
+				pocty.close();
+
 				pocet_iteraci += 1;
 			}
 
@@ -542,7 +557,7 @@ int main(int argc, char* const argv[])
 
 			for (size_t i = 0; i < size(bunky.x); i++)
 			{
-				glPointSize((2.f * bunky.r[i]));
+				glPointSize((korekce * bunky.r[i]));
 				glBegin(GL_POINTS);
 
 				if (bunky.tumor[i] == 1) {
@@ -585,7 +600,17 @@ int main(int argc, char* const argv[])
 
 				if (!(bunky.tumor[i] == 0 && zobrazeni == 1))
 				{
-					glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+					if (state != 2)
+					{
+						glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+					}
+					else
+					{
+						if (abs(bunky.z[i] - (mznew / 3.0)) < 10)
+						{
+							glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+						}
+					}
 				}
 				
 				glEnd();
@@ -595,21 +620,22 @@ int main(int argc, char* const argv[])
 			window.display(); // zobrazeni
 
 			// ulozeni snimku obrazovky
-			if ((ukladani == 1) && (pocet_iteraci % 20) == 1)
+			if ((ukladani == 1) && (pocet_iteraci % 1000) == 1)
 			{
 				sf::Image obr;
 				string nazev, pom, pom2;
 				pom = to_string(pocet_iteraci);
-				pom2 = to_string(zobrazeni);
+				pom2 = to_string(pAktiv);
 
 				nazev = "obr/Obr_" + pom2 + "_iter_" + pom + ".png";
 				obr = window.capture();
 				obr.saveToFile(nazev);
-				//sf::sleep(sf::milliseconds(10));
-				if (program == 1)
-				{
-					zobrazeni = !zobrazeni; // stridani zobrazeni
-				}
+				////sf::sleep(sf::milliseconds(10));
+
+				//if (program == 1)
+				//{
+				//	zobrazeni = !zobrazeni; // stridani zobrazeni
+				//}
 			}
 			
 		}
