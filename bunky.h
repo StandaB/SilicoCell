@@ -66,6 +66,11 @@ public:
 
 	vector<int> poctyB1;
 	vector<int> poctyB2;
+	vector<int> poctyG0;
+	vector<int> poctyG1;
+	vector<int> poctyM;
+
+	bool supresory = 0;
 	
 private:
 	vypocty vypocty;
@@ -132,7 +137,6 @@ private:
 	double snizovani = 0.9;
 	double metabolismus_0 = 0.05;
 	bool deska = 0;
-	bool supresory = 0;
 	double poskozeni_tum = 1;
 	double vaha = 1;
 	double zrychleni = 1;

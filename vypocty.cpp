@@ -30,7 +30,7 @@ double vypocty::ziviny(double xx, double yy, double zz, int vyber, float prostor
 
 	if (vysledek < 0)
 	{
-		vysledek = 0;
+		vysledek = 0.0;
 	}
 	else if (vysledek > 1)
 	{
@@ -65,7 +65,7 @@ double vypocty::kyslik(double xx, double yy, double zz, int vyber, float prostor
 
 	if (vysledek < 0)
 	{
-		vysledek = 0;
+		vysledek = 0.0;
 	}
 	else if (vysledek > 1)
 	{
@@ -93,12 +93,12 @@ double vypocty::toxiny(double xx, double yy, double zz, int vyber, float prostor
 	//}
 	//else if (vyber == 3)
 	//{
-		vysledek = exp(-(sqrt(pow((xx - b.posun_x), 2.0) + pow((yy - b.posun_y), 2.0) + pow(zz, 2.0))) / 40.0);
+		vysledek = exp(-(sqrt(pow((xx - b.posun_x), 2.0) + pow((yy - b.posun_y), 2.0) + pow(zz, 2.0))) / (1.0 * prostor / 3.0));
 	//}
 	
 	if (vysledek < 0)
 	{
-		vysledek = 0;
+		vysledek = 0.0;
 	}
 	else if (vysledek > 1)
 	{
@@ -133,13 +133,13 @@ double vypocty::RF(double xx, double yy, double zz, int vyber, float prostor, do
 
 	vysledek = vysledek - pokles;
 
-	if (vysledek < 0)
+	if (vysledek < 0.0)
 	{
-		vysledek = 0;
+		vysledek = 0.0;
 	}
-	else if (vysledek > 1)
+	else if (vysledek > 1.0)
 	{
-		vysledek = 1;
+		vysledek = 1.0;
 	}
 
 	return(vysledek);

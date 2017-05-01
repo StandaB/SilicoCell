@@ -141,7 +141,7 @@ int main(int argc, char* const argv[])
 	bool nacteni = 0;
 	int vklidu = 0;
 	int program = 0;
-	bool pAktiv = 0;
+	int pAktiv = 0;
 	bool niceni = 0;
 
 // GUI
@@ -153,7 +153,8 @@ int main(int argc, char* const argv[])
 		cout << "		 -p (standardni model s tumorem)" << endl;
 		cout << "		 -p1 (predvolba 1, tumor ve tkani)" << endl;
 		cout << "		 -p2 (predvolba 2, simulace poraneni)" << endl;
-		cout << "		 -p3 (predvolba 3, vytvoreni dutiny)";
+		cout << "		 -p3 (predvolba 3, vytvoreni dutiny)" << endl;
+		cout << "		 -p4 (predvolba 4, reaktivace tumor supresoru)";
 	}
 	else if ((strcmp(argv[1], "h") == 0) || strcmp(argv[1], "-h") == 0) { // napoveda
 
@@ -181,6 +182,7 @@ int main(int argc, char* const argv[])
 		cout << "-Klavesa Ctrl: prepnuti zobrazeni kolonie / jen tumor\n";
 		cout << "-Klavesa S: ulozeni kolonie do souboru 'kolonie.dat'\n";
 		cout << "-Klavesa N: nacteni kolonie ze souboru 'kolonie.dat'\n";
+		cout << "-Klavesa P: pozastaveni simulace'\n";
 		cout << "-Klavesa Esc: ukonceni simulace\n\n\n";
 
 		cout << "Stanislav Belehradek, 2017\n";
@@ -199,7 +201,7 @@ int main(int argc, char* const argv[])
 		iteraci = 1;
 		meritko = 1;
 		omezeni_r = 0;
-		vyber = 1;
+		vyber = 0;
 		tum = 0;
 		pokracovat = 1;
 		nacteni = 1;
@@ -212,6 +214,11 @@ int main(int argc, char* const argv[])
 		vyber = 1;
 		pokracovat = 1;
 		program = 1;
+		//iteraci = 20000;
+		//meritko = 4;
+		//vyber = 3;
+		//pokracovat = 1;
+		//program = 1;
 	}
 	else if ((strcmp(argv[1], "p2") == 0) || strcmp(argv[1], "-p2") == 0) // predvolba 2
 	{
@@ -226,10 +233,19 @@ int main(int argc, char* const argv[])
 	{
 		iteraci = 10000;
 		meritko = 4;
-		omezeni_r = 100;
+		omezeni_r = 0;
 		vyber = 3;
 		pokracovat = 1;
 		program = 3;
+	}
+	else if ((strcmp(argv[1], "p4") == 0) || strcmp(argv[1], "-p4") == 0) // predvolba 4
+	{
+		iteraci = 10000;
+		meritko = 4;
+		omezeni_r = 0;
+		vyber = 3;
+		pokracovat = 1;
+		program = 4;
 	}
 
 ////// testovani
@@ -265,19 +281,19 @@ int main(int argc, char* const argv[])
 				omezeni_r = pom;
 			}
 			stringstream(argv[4]) >> pom;
-			if (pom == 1)
+			if (pom == 1) // plocha
 			{
 				vyber = 1;
 			}
-			else if (pom == 2)
+			else if (pom == 2) // ceva
 			{
 				vyber = 2;
 			}
-			else if (pom == 3)
+			else if (pom == 3) // bod
 			{
 				vyber = 3;
 			}
-			else
+			else // idealni
 			{
 				vyber = 0;
 			}
@@ -381,11 +397,11 @@ int main(int argc, char* const argv[])
 						logfile << aktualni_cas(cas) << " - Program ukoncen pri iteraci " << pocet_iteraci << ", pocet bunek: " << size(bunky.x) << endl;
 						logfile.close();
 
-						ofstream pocty("pocty.txt");
+						ofstream pocty("pocty.txt", std::ios_base::app | std::ios_base::out);
 						pocty << aktualni_cas(cas) << endl;
 						for (size_t i = 0; i < size(bunky.poctyB1); i++)
 						{
-							pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << endl;
+							pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << "	" << bunky.poctyG0[i] << "	" << bunky.poctyG1[i] << "	" << bunky.poctyM[i] << endl;
 						}
 						pocty << endl;
 						pocty.close();
@@ -492,7 +508,7 @@ int main(int argc, char* const argv[])
 					{
 						pAktiv = 1;
 
-						if (program == 1)
+						if ((program == 1) || (program == 4))
 						{
 							tum = 1;
 							iteraci = 5000;
@@ -504,6 +520,7 @@ int main(int argc, char* const argv[])
 							iteraci = 5000;
 							pocet_iteraci = 1;
 							bunky.vymazani();
+							cout << "\nVytvoreni poskozeni" << endl;
 						}
 						if (program == 3)
 						{
@@ -521,9 +538,22 @@ int main(int argc, char* const argv[])
 					tum = 0;
 				}
 
+
 				bunky.bunky_cyklus(nastaveni);
 
-				pocet_iteraci += 1;
+
+				if ((pAktiv == 1) && (program == 4))
+				{
+					if (bunky.poctyB2.back() > 200)
+					{
+						pAktiv = 2;
+						bunky.supresory = 1;
+						iteraci = 5000;
+						pocet_iteraci = 1;
+						cout << "\nReaktivace tumor supresoru" << endl;
+					}
+				}
+
 				cout << "\r                                  ";
 				cout << "\riterace: " << pocet_iteraci << " | pocet bunek: " << size(bunky.x);
 			}
@@ -539,16 +569,25 @@ int main(int argc, char* const argv[])
 				logfile << aktualni_cas(cas) << " - Ukonceni simulace. Delka vypoctu: " << cas_rozdil.count() << " sekund, " << size(bunky.x) << " bunek" << endl;
 				logfile.close();
 
-				ofstream pocty("pocty.txt");
+				ofstream pocty("pocty.txt", std::ios_base::app | std::ios_base::out);
 				pocty << aktualni_cas(cas) << endl;
 				for (size_t i = 0; i < size(bunky.poctyB1); i++)
 				{
-					pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << endl;
+					pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << "	" << bunky.poctyG0[i] << "	" << bunky.poctyG1[i] << "	" << bunky.poctyM[i] << endl;
 				}
 				pocty << endl;
 				pocty.close();
 
-				pocet_iteraci += 1;
+				sf::Image obr;
+				string nazev, pom, pom2;
+				pom = to_string(pocet_iteraci);
+				pom2 = to_string(pAktiv);
+
+				nazev = "Obr_" + pom2 + "_iter_" + pom + ".png";
+				obr = window.capture();
+				obr.saveToFile(nazev);
+
+				ukladani = 0;
 			}
 
 			// vykresleni
@@ -572,6 +611,10 @@ int main(int argc, char* const argv[])
 					else if (bunky.stav[i] == 2)
 					{
 						glColor3f(0.2, 0.3, 0.8);
+					}
+					else
+					{
+						glColor3f(0.5, 0.0, 0.2);
 					}
 				}
 				else
@@ -619,25 +662,31 @@ int main(int argc, char* const argv[])
 
 			window.display(); // zobrazeni
 
+
 			// ulozeni snimku obrazovky
-			if ((ukladani == 1) && (pocet_iteraci % 1000) == 1)
+			if (pocet_iteraci <= iteraci)
 			{
-				sf::Image obr;
-				string nazev, pom, pom2;
-				pom = to_string(pocet_iteraci);
-				pom2 = to_string(pAktiv);
+				if ((ukladani == 1) && (pocet_iteraci % 2000) == 0) // ZMENIT NA 1000 !!
+				{
+					sf::Image obr;
+					string nazev, pom, pom2;
+					pom = to_string(pocet_iteraci);
+					pom2 = to_string(pAktiv);
 
-				nazev = "obr/Obr_" + pom2 + "_iter_" + pom + ".png";
-				obr = window.capture();
-				obr.saveToFile(nazev);
-				////sf::sleep(sf::milliseconds(10));
+					nazev = "obr/Obr_" + pom2 + "_iter_" + pom + ".png";
+					obr = window.capture();
+					obr.saveToFile(nazev);
+					////sf::sleep(sf::milliseconds(10));
 
-				//if (program == 1)
-				//{
-				//	zobrazeni = !zobrazeni; // stridani zobrazeni
-				//}
+					//if (program == 1)
+					//{
+					//	zobrazeni = !zobrazeni; // stridani zobrazeni
+					//}
+				}
 			}
-			
+
+			pocet_iteraci += 1;
+
 		}
 	}
 
