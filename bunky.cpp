@@ -166,7 +166,6 @@ void bunky::bunky_cyklus(double nastaveni[])
 	bool niceni = nastaveni[9];
 
 
-
 	kolik = size(x);
 
 	for (size_t n = 0; n < kolik; n++)
@@ -237,8 +236,8 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 		double HIF1 = 0.0, PHD = 0.0, PDH = 0.0;
 
-		PHD = (kyslik + (1.0 - meta[n])) / 2.0;
-		HIF1 = ((double(Akt) + metabolismus[n]) + (1.0 - PHD)) / 3.0;
+		PHD = (9.0 * kyslik + (1.0 - meta[n])) / 10.0;
+		HIF1 = ((Akt + metabolismus[n]) / 2.0) * (1.0 - PHD);
 		PDH = 1.0 - HIF1;
 
 		metabolismus[n] = (((kolik_RF + kolik_zivin) * double(prechod_G1)) + PDH) / 3.0;
@@ -278,17 +277,17 @@ void bunky::bunky_cyklus(double nastaveni[])
 
 		if (stav[n] != -1)
 		{
-			if (kolik_RF < 0.05) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
+			if (kolik_RF < 0.01) // nedostatek RF -> bunka umira [Cell Size Regulation in Mammalian Cells.pdf]
 			{
 				stav[n] = -1; // apoptoza
 				trvani_cyklu[n] = 0;
 			}
-			if (kolik_zivin < 0.05)
+			if (kolik_zivin < 0.01)
 			{
 				stav[n] = -1; // apoptoza
 				trvani_cyklu[n] = 0;
 			}
-			if (kyslik < 0.05)
+			if (kyslik < 0.01)
 			{
 				stav[n] = -1; // apoptoza
 				trvani_cyklu[n] = 0;
@@ -456,7 +455,8 @@ void bunky::bunky_cyklus(double nastaveni[])
 				zrychleni = t_tumor; // nastavitelne zrychleni rustu tumoru
 			}
 
-			vaha = (1.0 - ((metabolismus[n] - 0.8))) * zrychleni; // pomalejsi metabolismus -> delsi cyklus
+			//vaha = (1.0 - ((metabolismus[n] - 0.8))) * zrychleni; // pomalejsi metabolismus -> delsi cyklus
+			vaha = (1.96 - metabolismus[n]) * zrychleni;
 
 			if ((trvani_cyklu[n] > (t_G1 * vaha / meritko)) && (stav[n] == 1))
 			{
@@ -475,7 +475,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 					stav[n] = -1; // apoptoza
 					trvani_cyklu[n] = 0;
 				}
-				else if (((nah_c(gen) / 1000000000.0) - poskozeni[n]) < (prah_apop[n] / meritko)) // kontrolni bod
+				else if (((nah_c(gen) / 1000000000.0) - poskozeni[n]) < prah_apop[n]) // kontrolni bod
 				{
 					mark2 = 0;
 					stav[n] = -1; // apoptoza
@@ -517,15 +517,17 @@ void bunky::bunky_cyklus(double nastaveni[])
 				zrychleni = t_tumor; // nastavitelne zrychleni rustu tumoru
 			}
 
-			vaha = (1.0 - ((metabolismus[n] - 0.8))) * zrychleni; // pomalejsi metabolismus -> delsi cyklus
-			if (vaha > 1.5)
-			{
-				vaha = 1.5;
-			}
-			else if (vaha < 0.8)
-			{
-				vaha = 0.8;
-			}
+			//vaha = (1.0 - ((metabolismus[n] - 0.8))) * zrychleni; // pomalejsi metabolismus -> delsi cyklus
+			vaha = (1.96 - metabolismus[n]) * zrychleni;
+
+			//if (vaha > 1.5)
+			//{
+			//	vaha = 1.5;
+			//}
+			//else if (vaha < 0.8)
+			//{
+			//	vaha = 0.8;
+			//}
 
 			delka_cyklu[n] = t_S + t_G2 + t_M; // delka cyklu
 			delka_cyklu[n] = delka_cyklu[n] * vaha / meritko; // vahovani
@@ -541,7 +543,7 @@ void bunky::bunky_cyklus(double nastaveni[])
 			{
 				trvani_cyklu[n] = trvani_cyklu[n] + 1;
 
-				if (((nah_c(gen) / 1000000000.0) - poskozeni[n]) < (2.0 * prah_apop[n] / meritko)) // 2x kontrolni bod
+				if (((nah_c(gen) / 1000000000.0) - poskozeni[n]) < (2.0 * prah_apop[n])) // 2x kontrolni bod
 				{
 					stav[n] = -1; // apoptoza
 					trvani_cyklu[n] = 0;
@@ -681,21 +683,28 @@ void bunky::bunky_cyklus(double nastaveni[])
 		dotyku[ko] = vystup[4];
 
 		// omezeni rustu za hranici
-		if (omezeni_r > 0)
+		if (omezeni_r > 0.0)
 		{
-			if (sqrt(pow(do_x - posun_x, 2.0) + pow(do_z, 2.0)) > omezeni_r) // omezeni valec
+			if (vyber == 1)
 			{
-				do_x = x[ko];
-				do_z = z[ko];
-				dotyku[ko] += dotyku[ko];
+				if (sqrt(pow(do_x - posun_x, 2.0) + pow(do_z, 2.0)) > omezeni_r) // omezeni valec
+				{
+					do_x = x[ko];
+					do_z = z[ko];
+					dotyku[ko] += dotyku[ko];
+				}
 			}
-			//if (sqrt(pow(do_x - posun_x, 2.0) + pow(do_y - posun_y, 2.0) + pow(do_z, 2.0)) > omezeni_r) // omezeni koule
-			//{
-			//	do_x = x[ko];
-			//	do_y = y[ko];
-			//	do_z = z[ko];
-			//	dotyku[ko] += dotyku[ko];
-			//}
+			else
+			{
+				if (sqrt(pow(do_x - posun_x, 2.0) + pow(do_y - posun_y, 2.0) + pow(do_z, 2.0)) > omezeni_r) // omezeni koule
+				{
+					do_x = x[ko];
+					do_y = y[ko];
+					do_z = z[ko];
+					dotyku[ko] += dotyku[ko];
+				}
+			}
+
 		}
 		if (deska == 1)
 		{
