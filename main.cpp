@@ -15,7 +15,7 @@
 using namespace std;
 
 
-// rozliseni displeje
+// zjisteni rozliseni displeje
 void GetDesktopResolution(int& horizontal, int& vertical)
 {
 	RECT desktop;
@@ -35,9 +35,7 @@ static char *aktualni_cas(char *delka) {
 
 int main(int argc, char* const argv[])
 {
-	SetConsoleTitle(TEXT("SilicoCell model"));
-
-	//std::thread t[4];
+	SetConsoleTitle(TEXT("SilicoCell model")); // nazev aplikace
 
 	int horizontal = 0;
 	int vertical = 0;
@@ -52,17 +50,14 @@ int main(int argc, char* const argv[])
 	bool ukladani = 0;
 	double korekce = 2;
 
-	// // casy // //
+	// // casy v minutach // //
 	double meritko = 1.0;
-	// casy z[1], v minutach
-	double t_G1 = 660.0;
-	double t_S = 480.0;
-	double t_G2 = 240.0;
-	double t_M = 60.0;
-	double t_Apop = 180.0; // zdroj[30]
-	double t_cekani = 50.0; // cekani v G0(najit zdroj!!)
-							// (J.Biol.Chem. - 1996 - Loyer - 11484 - 92.pdf, http://www.nature.com/articles/srep04012, 
-							// http ://mcb.asm.org/content/23/7/2351.abstract, http://www.nature.com/onc/journal/v19/n49/full/1203858a.html)
+	double t_G1 = 540.0;
+	double t_S = 600.0;
+	double t_G2 = 270.0;
+	double t_M = 30.0;
+	double t_Apop = 180.0; // delka procesu apoptozy
+	double t_cekani = 180.0; // cekani v G0 (synteza proteinu)
 
 	// prepsani parametru casu z config.ini
 	string prvni, druhy;
@@ -76,8 +71,8 @@ int main(int argc, char* const argv[])
 		}
 		soubor.close();
 
-		// cteni parametru do promennych
-		int zf = 1; // zacatek nastaveni MAIN
+		// zapis parametru do promennych
+		int zf = 1; // radek zacatku nastaveni MAIN
 		t_G1 = param[zf];
 		t_S = param[zf + 1];
 		t_G2 = param[zf + 2];
@@ -97,23 +92,23 @@ int main(int argc, char* const argv[])
 		soubor << "t_G2 270" << endl;
 		soubor << "t_M 30" << endl;
 		soubor << "t_Apop 180" << endl;
-		soubor << "t_cekani 180" << endl;
-		soubor << "ukladani 0" << endl;
-		soubor << "korekce_r 2" << endl;
+		soubor << "t_cekani 180" << endl; // cekani na syntezu proteinu
+		soubor << "ukladani 0" << endl; // zapnuti ukladani screenshotu
+		soubor << "korekce_r 2" << endl; // korekce zobrazeni bunek jako dotykajicich se kouli
 		soubor << "=VYPOCTY= 1" << endl;
-		soubor << "prostor 100" << endl;
-		soubor << "pokles 0.2" << endl;
+		soubor << "prostor 100" << endl; // gradient k
+		soubor << "pokles 0.2" << endl; // linearni pokles mnozstvi latek
 		soubor << "=BUNKY= 2" << endl;
-		soubor << "kolonie 100" << endl;
-		soubor << "r_bunek 10" << endl;
-		soubor << "t_tumor 0.95" << endl;
-		soubor << "poc_dot 6" << endl;
-		soubor << "transport 0.8" << endl;
-		soubor << "oprava 0.001" << endl;
-		soubor << "rovina 0" << endl;
-		soubor << "supresory 0" << endl;
-		soubor << "poskozeni 0.5" << endl;
-		soubor << "prah_ap 0.005";
+		soubor << "kolonie 100" << endl; // pocet generovanych bunek
+		soubor << "r_bunek 10" << endl; // polomer bunek
+		soubor << "t_tumor 0.95" << endl; // nasobek rychlosti rustu tumoru
+		soubor << "poc_dot 6" << endl; // pocet dotyku pro inhibici deleni
+		soubor << "transport 0.8" << endl; // nasobek pro ubirani metabolitu a spotrebu zivin
+		soubor << "oprava 0.001" << endl; // oprava poskozeni
+		soubor << "rovina 0" << endl; // zapnuti omezeni na rovine
+		soubor << "supresory 0" << endl; // povoleni tumorsupresoru pro rakovinne bunky
+		soubor << "poskozeni 0.5" << endl; // prah apoptozy pro poskozeni bunek
+		soubor << "prah_ap 0.005"; // prah pravdepodobnosti apoptozy v kontrolnich bodech
 
 		soubor.close();
 	}
@@ -128,6 +123,7 @@ int main(int argc, char* const argv[])
 		logfile.close();
 	}
 
+	// vytvoreni souboru pro zapis poctu bunek
 	ifstream pocty("pocty.txt");
 	if (!pocty.good())
 	{
@@ -136,13 +132,13 @@ int main(int argc, char* const argv[])
 	}
 
 
-	int state = 1;
+	int state = 1; // stav kliknuti mysi
 	double pom;
-	bool nacteni = 0;
-	int vklidu = 0;
-	int program = 0;
-	int pAktiv = 0;
-	bool niceni = 0;
+	bool nacteni = 0; // nacteni z externiho souboru
+	int vklidu = 0; // ustaleni kolonie
+	int program = 0; // vyber prednastaveneho rezimu
+	int pAktiv = 0; // rezim je aktivni
+	bool niceni = 0; // zapnuti niceni bunek v rezimu vytvoreni dutiny
 
 // GUI
 	system("cls"); // vymazani obsahu okna
@@ -197,7 +193,7 @@ int main(int argc, char* const argv[])
 		tum = 1;
 		pokracovat = 1;
 	}
-	else if ((strcmp(argv[1], "n") == 0) || strcmp(argv[1], "-n") == 0) { // standardni nastaveni
+	else if ((strcmp(argv[1], "n") == 0) || strcmp(argv[1], "-n") == 0) { // nacteni ze souboru
 		iteraci = 1;
 		meritko = 1;
 		omezeni_r = 0;
@@ -248,11 +244,7 @@ int main(int argc, char* const argv[])
 		program = 4;
 	}
 
-////// testovani
-//	pokracovat = 1;
-//	meritko = 2;
-//	iteraci = 2000;
-
+	// vstup nastaveni z konzole
 	if (argc == 6 || pokracovat == 1)
 	{
 		if (!pokracovat)
@@ -327,7 +319,6 @@ int main(int argc, char* const argv[])
 		logfile << aktualni_cas(cas) << " - Zahajeni simulace (meritko " << meritko << "; " << iteraci << " iteraci; omezeni " << omezeni_r << "; tumor " << tum << ")" << endl;
 		logfile.close();
 
-		// vypocet a zobrazeni
 		// zapnuti okna
 		sf::ContextSettings con_set;
 		con_set.antialiasingLevel = 4;
@@ -341,11 +332,11 @@ int main(int argc, char* const argv[])
 
 		sf::RenderWindow window(sf::VideoMode(screen_width, screen_height, 32), "SilicoCell Model", sf::Style::Close, con_set);	// inicializace okna
 
+		// nastaveni OpenGL
 		glClearDepth(1.f);
 		glClearColor(1.f, 1.f, 1.f, 0.f);
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		glDepthMask(GL_TRUE);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
@@ -354,27 +345,27 @@ int main(int argc, char* const argv[])
 		glPushMatrix();
 		glScalef((screen_width / 1280), (screen_height / 720), 1.0f);
 
-		window.setVerticalSyncEnabled(true);
+		window.setVerticalSyncEnabled(true); // vertikalni synchronizace pro zamezeni prilis vysoke rychlosti zobrazeni
 
 
-		bool odejit = 0;
 		int mxnew = 0, mynew = 0;
 		int mxx = 0, myy = 0;
 		int mxold = 0, myold = 0;
 		float mznew = 0, mzz = 0, mzold = 0;
-		bool zobrazeni = 0;
-		int pauza = 0;
+		bool zobrazeni = 0; // prepinac zobrazeni tumor/vse
+		int pauza = 0; // pozastaveni simulace
 
-		bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height);
+		bunky.transform2(mxnew, mynew, mznew, screen_width, screen_height); // transformace pro otaceni pomoci mysi
 
-		double nastaveni[] = { t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber, omezeni_r, niceni};
+		double nastaveni[] = { t_G1, t_S, t_G2, t_M, t_Apop, t_cekani, meritko, vyber, omezeni_r, niceni}; // sestava nastaveni simulace
 
-		auto cas_start = std::chrono::high_resolution_clock::now();
+		auto cas_start = std::chrono::high_resolution_clock::now(); // cas zahajeni simulace pro log
 
-		while (window.isOpen() && !odejit) {
+		// hlavni cyklus
+		while (window.isOpen()) {
 			sf::Event Event;
 			while (window.pollEvent(Event)) {
-				if (Event.type == sf::Event::Closed)
+				if (Event.type == sf::Event::Closed) // zavreni okna
 				{
 					window.close();
 
@@ -386,7 +377,7 @@ int main(int argc, char* const argv[])
 						logfile.close();
 					}
 				}
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) // zavreni okna klavesou Esc
 				{
 					window.close();
 
@@ -407,7 +398,7 @@ int main(int argc, char* const argv[])
 						pocty.close();
 					}
 				}
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) // prepnuti zobrazeni
 				{
 					if (zobrazeni)
 					{
@@ -429,7 +420,7 @@ int main(int argc, char* const argv[])
 					pocet_iteraci = 0;
 					sf::sleep(sf::milliseconds(100));
 				}
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) // pozastaveni
 				{
 					if (pauza == 0)
 					{
@@ -455,7 +446,7 @@ int main(int argc, char* const argv[])
 					mxnew = mxold - mxx + sf::Mouse::getPosition(window).x;
 					mynew = myold + myy - sf::Mouse::getPosition(window).y;
 				}
-				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) // rez
 				{
 					if (Event.type == sf::Event::MouseButtonPressed)
 					{
@@ -489,7 +480,7 @@ int main(int argc, char* const argv[])
 			if (pocet_iteraci < iteraci)
 			{
 				
-				if (nacteni == 1)
+				if (nacteni == 1) // nacteni kolonie ze souboru
 				{
 					bunky.nacist();
 					nacteni = 0;
@@ -539,7 +530,7 @@ int main(int argc, char* const argv[])
 				}
 
 
-				bunky.bunky_cyklus(nastaveni);
+				bunky.bunky_cyklus(nastaveni); // model bunecneho cyklu a pohybu
 
 
 				if ((pAktiv == 1) && (program == 4))
@@ -571,7 +562,7 @@ int main(int argc, char* const argv[])
 
 				ofstream pocty("pocty.txt", std::ios_base::app | std::ios_base::out);
 				pocty << aktualni_cas(cas) << endl;
-				for (size_t i = 0; i < size(bunky.poctyB1); i++)
+				for (size_t i = 0; i < size(bunky.poctyB1); i++) // zapis poctu do souboru
 				{
 					pocty << bunky.poctyB1[i] << "	" << bunky.poctyB2[i] << "	" << bunky.poctyG0[i] << "	" << bunky.poctyG1[i] << "	" << bunky.poctyM[i] << endl;
 				}
@@ -585,7 +576,7 @@ int main(int argc, char* const argv[])
 
 				nazev = "Obr_" + pom2 + "_iter_" + pom + ".png";
 				obr = window.capture();
-				obr.saveToFile(nazev);
+				obr.saveToFile(nazev); // ulozeni posledniho screenshotu okna
 
 				ukladani = 0;
 			}
@@ -596,10 +587,10 @@ int main(int argc, char* const argv[])
 
 			for (size_t i = 0; i < size(bunky.x); i++)
 			{
-				glPointSize((korekce * bunky.r[i]));
+				glPointSize((korekce * bunky.r[i])); // velikost*korekce
 				glBegin(GL_POINTS);
 
-				if (bunky.tumor[i] == 1) {
+				if (bunky.tumor[i] == 1) { // barva bunek tumoru
 					if (bunky.stav[i] == 0)
 					{
 						glColor3f(0.5, 0.5, 0.7);
@@ -617,7 +608,7 @@ int main(int argc, char* const argv[])
 						glColor3f(0.5, 0.0, 0.2);
 					}
 				}
-				else
+				else // barva zdravych bunek
 				{
 					if (bunky.stav[i] == -1)
 					{
@@ -645,13 +636,13 @@ int main(int argc, char* const argv[])
 				{
 					if (state != 2)
 					{
-						glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+						glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]); // zobrazeni cele kolonie
 					}
 					else
 					{
 						if (abs(bunky.z[i] - (mznew / 3.0)) < 10)
 						{
-							glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]);
+							glVertex3f(bunky.x[i] + (screen_width / 2), bunky.y[i] + (screen_height / 2), bunky.z[i]); // zobrazeni rezu o tloustce 10
 						}
 					}
 				}
@@ -666,7 +657,7 @@ int main(int argc, char* const argv[])
 			// ulozeni snimku obrazovky
 			if (pocet_iteraci <= iteraci)
 			{
-				if ((ukladani == 1) && (pocet_iteraci % 2000) == 0) // ZMENIT NA 1000 !!
+				if ((ukladani == 1) && (pocet_iteraci % 1000) == 0)
 				{
 					sf::Image obr;
 					string nazev, pom, pom2;
@@ -676,7 +667,6 @@ int main(int argc, char* const argv[])
 					nazev = "obr/Obr_" + pom2 + "_iter_" + pom + ".png";
 					obr = window.capture();
 					obr.saveToFile(nazev);
-					////sf::sleep(sf::milliseconds(10));
 
 					//if (program == 1)
 					//{
@@ -691,8 +681,3 @@ int main(int argc, char* const argv[])
 	}
 
 }
-
-
-
-
-

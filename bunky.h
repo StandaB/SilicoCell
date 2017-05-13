@@ -12,7 +12,6 @@
 #include <chrono>
 #include <fstream>
 #include <string>
-#include <future>
 #include <algorithm>
 #include <functional>
 #include <numeric>
@@ -20,8 +19,6 @@
 #include <random>
 
 using namespace std;
-
-
 
 class bunky {
 
@@ -49,15 +46,8 @@ public:
 
 	vector<int> tumor;
 
-	//double* ECM_x = new double[200*200*200]; // velikost ECM pole
-	//double* ECM_y = new double[200*200*200];
-	//double* ECM_z = new double[200*200*200];
-
-	int meze = 125;
-	int rozl = 20;
-	////double* RuFa = new double[meze * meze * meze]; // velikost pole rustovych faktoru pro bunky generujici RF
-	vector<double> meta; // pole metabolitu
-	vector<double> zvny; // pole zivin (odecet od kolik_zivin podle metabolismu bunek)
+	vector<double> meta; // tvorba metabolitu
+	vector<double> zvny; // spotreba zivin (odecet od kolik_zivin podle metabolismu bunek)
 
 	vector<double> prah_ziviny;
 	vector<double> prah_deleni;
@@ -130,16 +120,12 @@ private:
 
 	int kolik;
 
-	//double max_vzd = 100; // vzdalenost od stredu - pozice > max_vzd -> prechazi do G0 = omezeni oblasti vypoctu
 	int poc_dot = 5; // maximalni pocet dotyku pro vstup do G1
-	int poc_dot2 = 8;
 
 	double snizovani = 0.9;
-	double metabolismus_0 = 0.05;
 	bool deska = 0;
-	double poskozeni_tum = 1;
-	double vaha = 1;
-	double zrychleni = 1;
+	double vaha = 1.0;
+	double zrychleni = 1.0;
 
 	int mark1, mark2, mark3, mark4;
 	
